@@ -33,7 +33,7 @@ for message in __streamlit__.session_state.messages_historike:
             __streamlit__.markdown(message["content"])
 
 # 5. Gufata ubutumwa bw'umukoresha binyuze kuri st.chat_input()
-if ikibazo := __streamlit__.chat_input("Andika ubutumwa bwawe hano... / Type a message..."):
+if ikibazo := __streamlit__.chat_input("Type Here...."):
     
     # Kwerekana ubutumwa bw'umukoresha ako kanya
     with __streamlit__.chat_message("user"):
