@@ -1,2 +1,2 @@
 # GKevin-ai
-This is the an Assistant for all
+This is the an Assistant for you !
