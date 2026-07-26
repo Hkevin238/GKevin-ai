@@ -47,7 +47,7 @@ client = OpenAI(
     api_key="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"
 )
 
-# 3. Kubika amateka y'ibiganiro muri Streamlit Session State (Twongereyeho itegeko ryo kuterekana think)
+# 3. Kubika amateka y'ibiganiro muri Streamlit Session State
 if "messages_historike" not in __streamlit__.session_state:
     __streamlit__.session_state.messages_historike = [
         {
@@ -119,28 +119,28 @@ if ikibazo := __streamlit__.chat_input("Andika ubutumwa hano... / Type a message
     full_user_message = {"role": "user", "content": chat_payload}
     __streamlit__.session_state.messages_historike.append(full_user_message)
     
-    # Gusaba igisubizo muri Groq AI
+    # Gusaba igisubizo muri Groq AI hamwe na Spinner ya pending ("GKevin is thinking.....")
     try:
-        completion = client.chat.completions.create(
-            model="qwen/qwen3.6-27b",
-            messages=__streamlit__.session_state.messages_historike,
-            temperature=0.7,
-            max_tokens=1024
-        )
-        
-        igisubizo_cya_ai = completion.choices[0].message.content
-        
-        # Inyongera y'umutekano: Niba nanone yagerageza gusohora <think>, tuyihungabanye mu buryo bwa code
-        if "<think>" in igisubizo_cya_ai:
-            # Niba yabishyizemo, twagabanyamo twiyambaze gukuramo icyo gice cya think
-            parts = igisubizo_cya_ai.split("</think>")
-            if len(parts) > 1:
-                igisubizo_cya_ai = parts[-1].strip()
+        with __streamlit__.spinner("GKevin is thinking....."):
+            completion = client.chat.completions.create(
+                model="qwen/qwen3.6-27b",
+                messages=__streamlit__.session_state.messages_historike,
+                temperature=0.7,
+                max_tokens=1024
+            )
+            
+            igisubizo_cya_ai = completion.choices[0].message.content
+            
+            # Gukuraho burundu agace ka <think> niba kaje mu buryo bw'impanuka
+            if "<think>" in igisubizo_cya_ai:
+                parts = igisubizo_cya_ai.split("</think>")
+                if len(parts) > 1:
+                    igisubizo_cya_ai = parts[-1].strip()
 
         # Kwongera igisubizo cyiza cya AI muri historique
         __streamlit__.session_state.messages_historike.append({"role": "assistant", "content": igisubizo_cya_ai})
         
-        # Rerun kugira ngo igisubizo cy'ukuri kigaragare gusa
+        # Rerun kugira ngo ibisubizo byose byerekanwe neza
         __streamlit__.rerun()
         
     except Exception as e:
