@@ -43,7 +43,7 @@ __streamlit__.set_page_config(
     layout="centered"
 )
 
-__streamlit__.title("🤖 GKevin AI Assistant (Vision)")
+__streamlit__.title("🤖 GKevin AI Assistant")
 __streamlit__.write("I'm designed to make yours more easily.")
 
 # 3. Guhuza na Groq API
