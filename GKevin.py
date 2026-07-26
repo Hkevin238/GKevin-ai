@@ -3,12 +3,7 @@ from openai import OpenAI
 import base64
 from PIL import Image
 
-# --- 1. SHYIRA BASE64 YA LOGO YAWE HANO ---
-# Fata ifoto yawe uyihindure Base64 (urugero kuri base64-image.de), 
-# hanyuma ukureho "data:image/png;base64," ushyiremo gusa cya kinyandiko cyayo hagati y'uduce tw'ibirango.
-LOGO_BASE64 = "[SHYIRA_BASE64_YA_LOGO_YAWE_HANO]"
-
-# --- CSS YA CHATGPT-LIKE INPUT BOX ---
+# --- Gushyira ho CSS ya ChatGPT-like input box hamwe no guhindura Avatars ---
 st_css = """
 <style>
     /* Gukora ngo input box igororoke (square edges) nkiya ChatGPT */
@@ -20,38 +15,48 @@ st_css = """
     div[data-testid="stChatInputSubmitButton"] {
         border-radius: 0px !important;
     }
+    
+    /* Guhindura Avatar ya Assistant (Gukoresha ai.jpg) */
+    div[data-testid="stChatMessage"]:has(div[data-testid="chatAvatarAssistant"]) img {
+        content: url("ai.jpg");
+        border-radius: 50%;
+    }
+    
+    /* Guhindura Avatar y'Umukoresha (User) */
+    div[data-testid="stChatMessage"]:has(div[data-testid="chatAvatarUser"]) img {
+        content: url("ai.jpg");
+        border-radius: 50%;
+    }
 </style>
 """
 __streamlit__.markdown(st_css, unsafe_allow_html=True)
 
-# 2. Gushiraho Page Config na Logo Nshya (Favicon / Page Icon)
-PAGE_ICON_URL = f"data:image/png;base64,{LOGO_BASE64}" if LOGO_BASE64 != "[SHYIRA_BASE64_YA_LOGO_YAWE_HANO]" else "🤖"
-
+# 1. Gushiraho Title na Layout y'urupapuro
 __streamlit__.set_page_config(
     page_title="GKevin AI",
-    page_icon=PAGE_ICON_URL,
+    page_icon="🤖",
     layout="centered"
 )
 
 __streamlit__.title("🤖 GKevin AI Assistant (Vision)")
 __streamlit__.write("I'm designed to make yours more easily.")
 
-# 3. Guhuza na Groq API
+# 2. Guhuza na Groq API
 client = OpenAI(
     base_url="https://api.groq.com/openai/v1",
     api_key="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"
 )
 
-# 4. Kubika amateka y'ibiganiro muri Streamlit Session State
+# 3. Kubika amateka y'ibiganiro muri Streamlit Session State (Twongereyeho itegeko ryo kuterekana think)
 if "messages_historike" not in __streamlit__.session_state:
     __streamlit__.session_state.messages_historike = [
         {
             "role": "system", 
-            "content": "I'm GKevin AI, an ultra-fast assistant created by Developer Kevin on July 25, 2026, at the afternoon,if you want or need to contact with him contact on therealhacks583@gmail.com. You must detect the language the user is speaking. If the user speaks Kinyarwanda, reply fluently and naturally in Kinyarwanda. If the user speaks English or another language, reply in that language. However, if anyone asks who built you, who created you, or when you were created, you must always state that you were created by Developer Kevin on July 25, 2026, in the afternoon. Never say you were created by Meta or OpenAI. If you are provided with an image, describe or analyze what is in the image in the language the user is currently using."
+            "content": "I'm GKevin AI, an ultra-fast assistant created by Developer Kevin on July 25, 2026, at the afternoon, if you want or need to contact with him contact on therealhacks583@gmail.com. You must detect the language the user is speaking. If the user speaks Kinyarwanda, reply fluently and naturally in Kinyarwanda. If the user speaks English or another language, reply in that language. However, if anyone asks who built you, who created you, or when you were created, you must always state that you were created by Developer Kevin on July 25, 2026, in the afternoon. Never say you were created by Meta or OpenAI. If you are provided with an image, describe or analyze what is in the image in the language the user is currently using. IMPORTANT: Never output your internal thought process, reasoning steps, or any text starting with '<think>'. Always respond directly with the final answer only."
         }
     ]
 
-# 5. Sidebar History & File Uploader
+# 4. Sidebar History
 with __streamlit__.sidebar:
     __streamlit__.header("💬 Chat History")
     
@@ -63,7 +68,7 @@ with __streamlit__.sidebar:
 
     __streamlit__.markdown("---")
     
-    # File Uploader muri Sidebar yo kohereza ifoto
+    # File Uploader muri Sidebar
     __streamlit__.subheader("🖼️ Attach an Image (Optional)")
     uploaded_file = __streamlit__.file_uploader("Choose an image", type=["png", "jpg", "jpeg"])
     
@@ -72,7 +77,7 @@ with __streamlit__.sidebar:
         image = Image.open(uploaded_file)
         __streamlit__.image(image, caption="Uploaded Image", use_column_width=True)
 
-# 6. Kwerekana ubutumwa bwose bwari busanzwe muri historique
+# 5. Kwerekana ubutumwa bwose bwari busanzwe muri historique
 for message in __streamlit__.session_state.messages_historike:
     if message["role"] != "system":
         with __streamlit__.chat_message(message["role"]):
@@ -86,7 +91,7 @@ for message in __streamlit__.session_state.messages_historike:
             else:
                 __streamlit__.markdown(content)
 
-# 7. Gufata ubutumwa bw'umukoresha
+# 6. Gufata ubutumwa bw'umukoresha
 if ikibazo := __streamlit__.chat_input("Andika ubutumwa hano... / Type a message..."):
     
     chat_payload = []
@@ -114,24 +119,28 @@ if ikibazo := __streamlit__.chat_input("Andika ubutumwa hano... / Type a message
     full_user_message = {"role": "user", "content": chat_payload}
     __streamlit__.session_state.messages_historike.append(full_user_message)
     
-    # Gusaba igisubizo muri Groq AI (Koresha model nshya ya vision: qwen/qwen3.6-27b)
+    # Gusaba igisubizo muri Groq AI
     try:
-        with __streamlit__.chat_message("assistant"):
-            with __streamlit__.spinner("GKevin AI thinking....."):
-                completion = client.chat.completions.create(
-                    model="qwen/qwen3.6-27b",  
-                    messages=__streamlit__.session_state.messages_historike,
-                    temperature=0.7,
-                    max_tokens=1024
-                )
-                
-                igisubizo_cya_ai = completion.choices[0].message.content
-                __streamlit__.markdown(igisubizo_cya_ai)
-                
-        # Kwongera igisubizo cya AI muri historique
+        completion = client.chat.completions.create(
+            model="qwen/qwen3.6-27b",
+            messages=__streamlit__.session_state.messages_historike,
+            temperature=0.7,
+            max_tokens=1024
+        )
+        
+        igisubizo_cya_ai = completion.choices[0].message.content
+        
+        # Inyongera y'umutekano: Niba nanone yagerageza gusohora <think>, tuyihungabanye mu buryo bwa code
+        if "<think>" in igisubizo_cya_ai:
+            # Niba yabishyizemo, twagabanyamo twiyambaze gukuramo icyo gice cya think
+            parts = igisubizo_cya_ai.split("</think>")
+            if len(parts) > 1:
+                igisubizo_cya_ai = parts[-1].strip()
+
+        # Kwongera igisubizo cyiza cya AI muri historique
         __streamlit__.session_state.messages_historike.append({"role": "assistant", "content": igisubizo_cya_ai})
         
-        # Rerun kugira ngo ibintu byose bisubire ku murongo
+        # Rerun kugira ngo igisubizo cy'ukuri kigaragare gusa
         __streamlit__.rerun()
         
     except Exception as e:
