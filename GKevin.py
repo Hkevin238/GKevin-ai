@@ -34,7 +34,7 @@ __streamlit__.markdown(st_css, unsafe_allow_html=True)
 # 1. Gushiraho Title na Layout y'urupapuro
 __streamlit__.set_page_config(
     page_title="GKevin AI",
-    page_icon="🤖",
+    page_icon="ai.png",
     layout="centered"
 )
 
@@ -92,7 +92,7 @@ for message in __streamlit__.session_state.messages_historike:
                 __streamlit__.markdown(content)
 
 # 6. Gufata ubutumwa bw'umukoresha
-if ikibazo := __streamlit__.chat_input("Andika ubutumwa hano... / Type a message..."):
+if ikibazo := __streamlit__.chat_input("Type Here..."):
     
     chat_payload = []
     
