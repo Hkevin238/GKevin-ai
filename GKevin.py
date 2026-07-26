@@ -26,13 +26,32 @@ if "messages_historike" not in __streamlit__.session_state:
         }
     ]
 
-# 4. Kwerekana ubutumwa bwose bwari busanzwe muri historique (uretse System Prompt)
+# --- 4.ONGEYEHO: Sidebar History ---
+with __streamlit__.sidebar:
+    __streamlit__.header("💬 Chat History")
+    
+    # Kora Button yo gusiba amateka (Clear History)
+    if __streamlit__.button("Clear Conversation"):
+        __streamlit__.session_state.messages_historike = [
+            __streamlit__.session_state.messages_historike[0]  # Retain the system prompt
+        ]
+        __streamlit__.rerun()
+
+    __streamlit__.markdown("---")
+    __streamlit__.subheader("Previous Prompts:")
+    
+    # Kwerekana muri Sidebar ubutumwa bwose umukoresha yatanze mbere
+    for message in __streamlit__.session_state.messages_historike:
+        if message["role"] == "user":
+            __streamlit__.text(f"👤 {message['content'][:30]}...") # Ifata ibice by'ubutumwa bwabanje
+
+# 5. Kwerekana ubutumwa bwose bwari busanzwe muri historique (uretse System Prompt)
 for message in __streamlit__.session_state.messages_historike:
     if message["role"] != "system":
         with __streamlit__.chat_message(message["role"]):
             __streamlit__.markdown(message["content"])
 
-# 5. Gufata ubutumwa bw'umukoresha binyuze kuri st.chat_input()
+# 6. Gufata ubutumwa bw'umukoresha binyuze kuri st.chat_input()
 if ikibazo := __streamlit__.chat_input("Andika ubutumwa bwawe hano... / Type a message..."):
     
     # Kwerekana ubutumwa bw'umukoresha ako kanya
@@ -58,6 +77,9 @@ if ikibazo := __streamlit__.chat_input("Andika ubutumwa bwawe hano... / Type a m
                 
         # Kwongera igisubizo cya AI muri historique
         __streamlit__.session_state.messages_historike.append({"role": "assistant", "content": igisubizo_cya_ai})
+        
+        # Guhita uvugurura page kugira ngo sidebar na yo ihite yerekana ubutumwa bushya ako kanya
+        __streamlit__.rerun()
         
     except Exception as e:
         __streamlit__.error(f"Habaye ikibazo / An error occurred: {e}")
