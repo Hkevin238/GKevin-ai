@@ -4,7 +4,7 @@ from openai import OpenAI
 # 1. Gushiraho Title na Layout y'urupapuro
 __streamlit__.set_page_config(
     page_title="GKevin AI",
-    page_icon="🤖",
+    page_icon="kvn.png",
     layout="centered"
 )
 
