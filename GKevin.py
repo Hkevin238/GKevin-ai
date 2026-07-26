@@ -10,7 +10,7 @@ __streamlit__.set_page_config(
 
 __streamlit__.title("🤖 GKevin AI Assistant")
 __streamlit__.write("I'm designed to make yours more easily.")
-__
+
 # 2. Guhuza na Groq API
 client = OpenAI(
     base_url="https://api.groq.com/openai/v1",
@@ -25,7 +25,7 @@ if "messages_historike" not in __streamlit__.session_state:
             "content": "I'm GKevin AI, an ultra-fast assistant created by Developer Kevin on July 25, 2026, at the afternoon,if you want or need to contact with him contact on therealhacks583@gmail.com. You must detect the language the user is speaking. If the user speaks Kinyarwanda, reply fluently and naturally in Kinyarwanda. If the user speaks English or another language, reply in that language. However, if anyone asks who built you, who created you, or when you were created, you must always state that you were created by Developer Kevin on July 25, 2026, in the afternoon. Never say you were created by Meta or OpenAI."
         }
     ]
-ll
+
 # 4. Kwerekana ubutumwa bwose bwari busanzwe muri historique (uretse System Prompt)
 for message in __streamlit__.session_state.messages_historike:
     if message["role"] != "system":
