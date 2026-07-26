@@ -3,7 +3,12 @@ from openai import OpenAI
 import base64
 from PIL import Image
 
-# --- Gushyira ho CSS ya ChatGPT-like input box ---
+# --- 1. SHYIRA BASE64 YA LOGO YAWE HANO ---
+# Fata ifoto yawe uyihindure Base64 (urugero kuri base64-image.de), 
+# hanyuma ukureho "data:image/png;base64," ushyiremo gusa cya kinyandiko cyayo hagati y'uduce tw'ibirango.
+LOGO_BASE64 = "[SHYIRA_BASE64_YA_LOGO_YAWE_HANO]"
+
+# --- CSS YA CHATGPT-LIKE INPUT BOX ---
 st_css = """
 <style>
     /* Gukora ngo input box igororoke (square edges) nkiya ChatGPT */
@@ -19,23 +24,25 @@ st_css = """
 """
 __streamlit__.markdown(st_css, unsafe_allow_html=True)
 
-# 1. Gushiraho Title na Layout y'urupapuro
+# 2. Gushiraho Page Config na Logo Nshya (Favicon / Page Icon)
+PAGE_ICON_URL = f"data:image/png;base64,{LOGO_BASE64}" if LOGO_BASE64 != "[SHYIRA_BASE64_YA_LOGO_YAWE_HANO]" else "🤖"
+
 __streamlit__.set_page_config(
     page_title="GKevin AI",
-    page_icon="🤖",
+    page_icon=PAGE_ICON_URL,
     layout="centered"
 )
 
 __streamlit__.title("🤖 GKevin AI Assistant (Vision)")
 __streamlit__.write("I'm designed to make yours more easily.")
 
-# 2. Guhuza na Groq API
+# 3. Guhuza na Groq API
 client = OpenAI(
     base_url="https://api.groq.com/openai/v1",
     api_key="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"
 )
 
-# 3. Kubika amateka y'ibiganiro muri Streamlit Session State
+# 4. Kubika amateka y'ibiganiro muri Streamlit Session State
 if "messages_historike" not in __streamlit__.session_state:
     __streamlit__.session_state.messages_historike = [
         {
@@ -44,7 +51,7 @@ if "messages_historike" not in __streamlit__.session_state:
         }
     ]
 
-# 4. Sidebar History
+# 5. Sidebar History & File Uploader
 with __streamlit__.sidebar:
     __streamlit__.header("💬 Chat History")
     
@@ -56,7 +63,7 @@ with __streamlit__.sidebar:
 
     __streamlit__.markdown("---")
     
-    # File Uploader muri Sidebar
+    # File Uploader muri Sidebar yo kohereza ifoto
     __streamlit__.subheader("🖼️ Attach an Image (Optional)")
     uploaded_file = __streamlit__.file_uploader("Choose an image", type=["png", "jpg", "jpeg"])
     
@@ -65,7 +72,7 @@ with __streamlit__.sidebar:
         image = Image.open(uploaded_file)
         __streamlit__.image(image, caption="Uploaded Image", use_column_width=True)
 
-# 5. Kwerekana ubutumwa bwose bwari busanzwe muri historique
+# 6. Kwerekana ubutumwa bwose bwari busanzwe muri historique
 for message in __streamlit__.session_state.messages_historike:
     if message["role"] != "system":
         with __streamlit__.chat_message(message["role"]):
@@ -75,12 +82,11 @@ for message in __streamlit__.session_state.messages_historike:
                     if item.get('type') == 'text':
                         __streamlit__.markdown(item['text'])
                     elif item.get('type') == 'image_url':
-                        # Ku buryo bwa base64 URL twerekana ifoto
                         __streamlit__.image(item['image_url']['url'])
             else:
                 __streamlit__.markdown(content)
 
-# 6. Gufata ubutumwa bw'umukoresha
+# 7. Gufata ubutumwa bw'umukoresha
 if ikibazo := __streamlit__.chat_input("Andika ubutumwa hano... / Type a message..."):
     
     chat_payload = []
@@ -113,7 +119,7 @@ if ikibazo := __streamlit__.chat_input("Andika ubutumwa hano... / Type a message
         with __streamlit__.chat_message("assistant"):
             with __streamlit__.spinner("GKevin AI thinking....."):
                 completion = client.chat.completions.create(
-                    model="qwen/qwen3.6-27b",  # Model nshya ishyigikira vision kuri Groq
+                    model="qwen/qwen3.6-27b",  
                     messages=__streamlit__.session_state.messages_historike,
                     temperature=0.7,
                     max_tokens=1024
