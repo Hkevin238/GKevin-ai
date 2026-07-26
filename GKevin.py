@@ -9,7 +9,7 @@ __streamlit__.set_page_config(
 )
 
 __streamlit__.title("🤖 GKevin AI Assistant")
-__streamlit__.write("I'M A NEW AI GENERATION designed BY GKevin to make your life easily.")
+__streamlit__.write("I'M A NEW AI GENERATION designed BY Kevin ")
 
 # 2. Guhuza na Groq API
 client = OpenAI(
