@@ -7,15 +7,15 @@ import pypdf
 
 # --- 1. PAGE CONFIG ---
 __streamlit__.set_page_config(
-    page_title="GKevin AI Assistant",
+    page_title="GKevin AI Chatbot",
     page_icon="🤖",
     layout="centered"
 )
 
-# --- CSS YA CHATGPT-LIKE HAMWE N'ANIMATION YO KUJYAMBA NO KUMANUKA N'UBURYO BACKGROUND IHIHINDURA MU MABARA Y'UMUKORORBYA (SOFT RAINBOW) ---
+# --- CSS YA CHATGPT-LIKE HAMWE N'ANIMATION (FLOATING & SOFT RAINBOW BG) ---
 st_css = """
 <style>
-    /* Uburyo background yihindura buhoro buhoro mu mabara y'umukororbya yoroshye (adapika cyane) */
+    /* Uburyo background yihindura buhoro buhoro mu mabara y'umukororbya yoroshye */
     @keyframes softRainbowBg {
         0% { background-color: #1a1a2e; }
         25% { background-color: #1f1a24; }
@@ -24,22 +24,15 @@ st_css = """
         100% { background-color: #1a1a2e; }
     }
 
-    /* Gushyira background animation kuri App yose */
     .stApp {
         animation: softRainbowBg 15s ease infinite;
     }
 
     /* Uburyo bwo kuzamura no kumanika ijambo ry'imitwe (Floating Animation) */
     @keyframes floatUpDown {
-        0% {
-            transform: translateY(0px);
-        }
-        50% {
-            transform: translateY(-8px);
-        }
-        100% {
-            transform: translateY(0px);
-        }
+        0% { transform: translateY(0px); }
+        50% { transform: translateY(-8px); }
+        100% { transform: translateY(0px); }
     }
 
     .animated-title {
@@ -73,7 +66,8 @@ client = OpenAI(
     api_key="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"
 )
 
-# --- 3. SESSION STATE FOR CHAT HISTORY ---
+# --- 3. PERSISTENT SESSION STATE FOR CHAT HISTORY ---
+# Hano hahamyizwe uburyo bwo kubika amateka yose y'ibiganiro ngo adasibika
 if "messages_historike" not in __streamlit__.session_state:
     __streamlit__.session_state.messages_historike = [
         {
@@ -82,16 +76,18 @@ if "messages_historike" not in __streamlit__.session_state:
         }
     ]
 
-# Sidebar yo gusiba amateka
+# Sidebar yo kwerekana ubwinshi bw'ubutumwa bubitse (kept history) no kubusiba ku bushake
 with __streamlit__.sidebar:
     __streamlit__.header("💬 Chat History")
+    __streamlit__.write(f"Messages kept: {len(__streamlit__.session_state.messages_historike) - 1}")
+    
     if __streamlit__.button("Clear Conversation"):
         __streamlit__.session_state.messages_historike = [
             __streamlit__.session_state.messages_historike[0]
         ]
         __streamlit__.rerun()
 
-# --- 4. KWEREKANA HISTORIQUE ---
+# --- 4. KWEREKANA HISTORIQUE YOSE YABITSWE ---
 for message in __streamlit__.session_state.messages_historike:
     if message["role"] != "system":
         with __streamlit__.chat_message(message["role"]):
@@ -174,6 +170,7 @@ if ikibazo := __streamlit__.chat_input("Type here...."):
             "image_url": {"url": f"data:{mime_type};base64,{base64_image}"}
         })
 
+    # Kubika ubutumwa bw'umukoresha muri historique
     full_user_message = {"role": "user", "content": chat_payload}
     __streamlit__.session_state.messages_historike.append(full_user_message)
     
@@ -196,6 +193,7 @@ if ikibazo := __streamlit__.chat_input("Type here...."):
             
             igisubizo_cya_ai = igisubizo_cya_ai.replace("<think>", "").replace("</think>", "").strip()
             
+        # Kubika igisubizo cya AI muri historique kugira ngo kibe kept
         __streamlit__.session_state.messages_historike.append({"role": "assistant", "content": igisubizo_cya_ai})
         __streamlit__.rerun()
         
