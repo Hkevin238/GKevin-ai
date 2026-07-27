@@ -261,7 +261,7 @@ if ikibazo := __streamlit__.chat_input("Type here...."):
     try:
         with __streamlit__.spinner("GKevin is thinking....."):
             completion = client.chat.completions.create(
-                model="qwen/qwen3.6-27b",  
+                model="llama3-70b-8192",  
                 messages=__streamlit__.session_state.user_histories[active_user],
                 temperature=0.7,
                 max_tokens=1024
@@ -287,5 +287,4 @@ if ikibazo := __streamlit__.chat_input("Type here...."):
         __streamlit__.rerun()
         
     except Exception as e:
-        # Hano twahagaritse burundu ibyo bitambikamo mu kiganiro (no more ugly error boxes in chat interface)
         pass
