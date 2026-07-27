@@ -79,20 +79,20 @@ if "user_histories" not in __streamlit__.session_state:
 
 # --- 4. AUTHENTICATION (LOGIN & SIGN UP SIDEBAR) ---
 with __streamlit__.sidebar:
-    __streamlit__.header("🔐 Account Authentication")
+    __streamlit__.header("🔐 GKevin AI Assistant Account Authentication")
     
     if __streamlit__.session_state.logged_in_user is None:
-        auth_mode = __streamlit__.radio("Hitamo uburyo:", ["Login (Injira)", "Sign Up (Iyandikishe)"])
+        auth_mode = __streamlit__.radio("Choose how to access:", ["Login", "Sign Up"])
         
         email_input = __streamlit__.text_input("Email Address")
         password_input = __streamlit__.text_input("Password", type="password")
         
-        if auth_mode == "Sign Up (Iyandikishe)":
+        if auth_mode == "Sign Up":
             if __streamlit__.button("Create Account"):
                 if not email_input or not password_input:
-                    __streamlit__.error("Uzuza email na password neza!")
+                    __streamlit__.error("Please email and password aren't correct!")
                 elif email_input in __streamlit__.session_state.users_db:
-                    __streamlit__.warning("Iyi email isanzwe ikoreshwa! Injira cyangwa ukoreshe indi.")
+                    __streamlit__.warning("This email exist! Please login with else.")
                 else:
                     __streamlit__.session_state.users_db[email_input] = password_input
                     __streamlit__.session_state.user_histories[email_input] = [
