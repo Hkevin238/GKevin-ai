@@ -4,3 +4,4 @@ streamlit
 openai
 pillow
 pypdf
+supabase
