@@ -190,7 +190,7 @@ if uploaded_file is not None:
     else:
         __streamlit__.caption(f"📎 File attached: {uploaded_file.name}")
 
-# --- 7. CHAT INPUT N'UBURYO IKORANA NA GROQ ---
+# --- 7. CHAT INPUT N'UBURYO IKORANA NA GROQ N'UBURYO BW'IMIYOBORO (CONNECTION ERROR HANDLER) ---
 if ikibazo := __streamlit__.chat_input("Type here...."):
     
     chat_payload = []
@@ -254,7 +254,7 @@ if ikibazo := __streamlit__.chat_input("Type here...."):
             
             igisubizo_cya_ai = completion.choices[0].message.content
             
-            # --- UBURYO BWO GUSIBURA BURUNDU IBITEKEREZO (THINKING BLOCKS) ---
+            # --- GUSISURA NO GUSHIYHO MU BIKORESHWA ---
             if "</think>" in igisubizo_cya_ai:
                 parts = igisubizo_cya_ai.split("</think>")
                 igisubizo_cya_ai = parts[-1].strip()
@@ -262,16 +262,15 @@ if ikibazo := __streamlit__.chat_input("Type here...."):
                 parts = igisubizo_cya_ai.split("<think>")
                 igisubizo_cya_ai = parts[0].strip()
                 if not igisubizo_cya_ai and len(parts) > 1:
-                    # Niba yari yuzuye mo imbere gusa, fatanya ibindi bisigaye
                     sub_parts = parts[1].split(">")
                     if len(sub_parts) > 1:
                         igisubizo_cya_ai = sub_parts[-1].strip()
             
-            # Isukura rya nyuma ku bimenyetso byose byasigara
             igisubizo_cya_ai = igisubizo_cya_ai.replace("<think>", "").replace("</think>", "").strip()
             
         __streamlit__.session_state.user_histories[active_user].append({"role": "assistant", "content": igisubizo_cya_ai})
         __streamlit__.rerun()
         
     except Exception as e:
-        __streamlit__.error(f"Habaye ikibazo / An error occurred: {e}")
+        # Niba habaye ikibazo cy'ubuhahirane (connection issue / internet loss)
+        __streamlit__.error("Kevin Developer says that: Please reconnect my GKevin AI Assistant on internet to continue.")
