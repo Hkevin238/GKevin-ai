@@ -2,6 +2,8 @@ import streamlit as __streamlit__
 from openai import OpenAI
 import base64
 from PIL import Image
+import io
+import pypdf  # Bisabwa niba ushaka gusoma PDF (pip install pypdf)
 
 # --- 1. SHYIRA BASE64 YA LOGO YAWE HANO ---
 LOGO_BASE64 = "[SHYIRA_BASE64_YA_LOGO_YAWE_HANO]"
@@ -44,7 +46,7 @@ __streamlit__.set_page_config(
 )
 
 __streamlit__.title("🤖 GKevin AI Assistant")
-__streamlit__.write("I'm designed to make yours more easily.")
+__streamlit__.write("I'm designed to make your work easier.")
 
 # 3. Guhuza na Groq API
 client = OpenAI(
@@ -52,16 +54,16 @@ client = OpenAI(
     api_key="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"
 )
 
-# 4. Kubika amateka y'ibiganiro muri Streamlit Session State (Hamwe no gukumira <think>)
+# 4. Kubika amateka y'ibiganiro muri Streamlit Session State
 if "messages_historike" not in __streamlit__.session_state:
     __streamlit__.session_state.messages_historike = [
         {
             "role": "system", 
-            "content": "I'm GKevin AI, an ultra-fast assistant created by Developer Kevin on July 25, 2026, at the afternoon, if you want or need to contact with him contact on therealhacks583@gmail.com. You must detect the language the user is speaking. If the user speaks Kinyarwanda, reply fluently and naturally in Kinyarwanda. If the user speaks English or another language, reply in that language. However, if anyone asks who built you, who created you, or when you were created, you must always state that you were created by Developer Kevin on July 25, 2026, in the afternoon. Never say you were created by Meta or OpenAI. If you are provided with an image, describe or analyze what is in the image in the language the user is currently using. IMPORTANT: Never output your internal thought process, reasoning steps, or any text starting with '<think>'. Always respond directly with the final answer only."
+            "content": "I'm GKevin AI, an ultra-fast assistant created by Developer Kevin on July 25, 2026, at the afternoon, if you want or need to contact with him contact on therealhacks583@gmail.com. You must detect the language the user is speaking. If the user speaks Kinyarwanda, reply fluently and naturally in Kinyarwanda. If the user speaks English or another language, reply in that language. However, if anyone asks who built you, who created you, or when you were created, you must always state that you were created by Developer Kevin on July 25, 2026, in the afternoon. Never say you were created by Meta or OpenAI. If you are provided with an image or document, describe, analyze, or process what is in it in the language the user is currently using. IMPORTANT: Never output your internal thought process, reasoning steps, or any text starting with '<think>'. Always respond directly with the final answer only."
         }
     ]
 
-# 5. Sidebar History & File Uploader
+# 5. Sidebar History & File Uploader (Ifoto cyangwa Fayili zisanzwe)
 with __streamlit__.sidebar:
     __streamlit__.header("💬 Chat History")
     
@@ -73,14 +75,20 @@ with __streamlit__.sidebar:
 
     __streamlit__.markdown("---")
     
-    # File Uploader muri Sidebar yo kohereza ifoto
-    __streamlit__.subheader("🖼️ Attach an Image (Optional)")
-    uploaded_file = __streamlit__.file_uploader("Choose an image", type=["png", "jpg", "jpeg"])
+    # File Uploader rusange yo kohereza Fayili (PDF, TXT, Images, etc.)
+    __streamlit__.subheader("📎 Attach a File / Image")
+    uploaded_file = __streamlit__.file_uploader(
+        "Choose a file", 
+        type=["png", "jpg", "jpeg", "pdf", "txt", "csv", "docx"]
+    )
     
-    # Kwerekana ifoto yashyizemo muri sidebar
+    # Kwerekana icyo umukoresha yashyizemo muri sidebar
     if uploaded_file is not None:
-        image = Image.open(uploaded_file)
-        __streamlit__.image(image, caption="Uploaded Image", use_column_width=True)
+        if uploaded_file.type.startswith("image/"):
+            image = Image.open(uploaded_file)
+            __streamlit__.image(image, caption="Uploaded Image", use_column_width=True)
+        else:
+            __streamlit__.info(f"Attached File: **{uploaded_file.name}**")
 
 # 6. Kwerekana ubutumwa bwose bwari busanzwe muri historique
 for message in __streamlit__.session_state.messages_historike:
@@ -96,18 +104,39 @@ for message in __streamlit__.session_state.messages_historike:
             else:
                 __streamlit__.markdown(content)
 
-# 7. Gufata ubutumwa bw'umukoresha
+# 7. Gufata ubutumwa bw'umukoresha n'amafayili
 if ikibazo := __streamlit__.chat_input("Type here...."):
     
     chat_payload = []
+    file_text_content = ""
     
-    # Ongeramo text niba ihari
-    if ikibazo:
-        __streamlit__.chat_message("user").markdown(ikibazo)
-        chat_payload.append({"type": "text", "text": ikibazo})
-
-    # Hindura ifoto muri Base64 niba ihari
+    # Gusoma ibiri muri fayili niba ari text cyangwa PDF
     if uploaded_file is not None:
+        if uploaded_file.type == "application/pdf":
+            try:
+                reader = pypdf.PdfReader(uploaded_file)
+                for page in reader.pages:
+                    file_text_content += page.extract_text() + "\n"
+            except Exception as e:
+                file_text_content = f"[Error reading PDF: {e}]"
+        elif uploaded_file.type == "text/plain":
+            file_text_content = uploaded_file.getvalue().decode("utf-8")
+        elif uploaded_file.type in ["application/vnd.openxmlformats-officedocument.wordprocessingml.document", "text/csv"]:
+            file_text_content = f"[Attached Document: {uploaded_file.name}]"
+
+    # Guhuza ubutumwa bw'umukoresha n'ibiri muri fayili
+    full_query = ikibazo
+    if file_text_content and not uploaded_file.type.startswith("image/"):
+        full_query = f"{ikibazo}\n\nHere is the content of the attached file ({uploaded_file.name}):\n{file_text_content}"
+
+    if full_query:
+        __streamlit__.chat_message("user").markdown(ikibazo)
+        if uploaded_file and not uploaded_file.type.startswith("image/"):
+            __streamlit__.caption(f"📎 Attached: {uploaded_file.name}")
+        chat_payload.append({"type": "text", "text": full_query})
+
+    # Niba ari ifoto, yongeremo nka image_url
+    if uploaded_file is not None and uploaded_file.type.startswith("image/"):
         with __streamlit__.chat_message("user"):
             __streamlit__.image(uploaded_file)
             
@@ -124,7 +153,7 @@ if ikibazo := __streamlit__.chat_input("Type here...."):
     full_user_message = {"role": "user", "content": chat_payload}
     __streamlit__.session_state.messages_historike.append(full_user_message)
     
-    # Gusaba igisubizo muri Groq AI hamwe na Spinner ya "GKevin is thinking....."
+    # Gusaba igisubizo muri Groq AI hamwe na Spinner
     try:
         with __streamlit__.spinner("GKevin is thinking....."):
             completion = client.chat.completions.create(
@@ -136,13 +165,16 @@ if ikibazo := __streamlit__.chat_input("Type here...."):
             
             igisubizo_cya_ai = completion.choices[0].message.content
             
-            # Gukuraho burundu <think> niba yaje mu buryo bw'impanuka
+            # Gukuraho burundu <think> niba yaje cyangwa izindi tags zisa zityo
             if "<think>" in igisubizo_cya_ai:
                 parts = igisubizo_cya_ai.split("</think>")
                 if len(parts) > 1:
                     igisubizo_cya_ai = parts[-1].strip()
-                
-        # Kwongera igisubizo cya AI cyatunganyijwe muri historique
+            
+            # Guhanagura burundu ibindi bimenyetso byose bya <think> byasigara
+            igisubizo_cya_ai = igisubizo_cya_ai.replace("<think>", "").replace("</think>", "").strip()
+            
+        # Kwongera igisubizo cya AI muri historique
         __streamlit__.session_state.messages_historike.append({"role": "assistant", "content": igisubizo_cya_ai})
         
         # Rerun kugira ngo ibintu byose bisubire ku murongo
