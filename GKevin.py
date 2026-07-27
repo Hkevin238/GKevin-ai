@@ -66,29 +66,86 @@ client = OpenAI(
     api_key="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"
 )
 
-# --- 3. PERSISTENT SESSION STATE FOR CHAT HISTORY ---
-# Hano hahamyizwe uburyo bwo kubika amateka yose y'ibiganiro ngo adasibika
-if "messages_historike" not in __streamlit__.session_state:
-    __streamlit__.session_state.messages_historike = [
+# --- 3. DATABASE Y'ABAKORESHA (USER ACCOUNTS DATABASE) MURI SESSION STATE ---
+if "users_db" not in __streamlit__.session_state:
+    __streamlit__.session_state.users_db = {}  # {email: password}
+
+if "logged_in_user" not in __streamlit__.session_state:
+    __streamlit__.session_state.logged_in_user = None
+
+if "user_histories" not in __streamlit__.session_state:
+    __streamlit__.session_state.user_histories = {}  # {email: messages_list}
+
+
+# --- 4. AUTHENTICATION (LOGIN & SIGN UP SIDEBAR) ---
+with __streamlit__.sidebar:
+    __streamlit__.header("🔐 Account Authentication")
+    
+    if __streamlit__.session_state.logged_in_user is None:
+        auth_mode = __streamlit__.radio("Hitamo uburyo:", ["Login (Injira)", "Sign Up (Iyandikishe)"])
+        
+        email_input = __streamlit__.text_input("Email Address")
+        password_input = __streamlit__.text_input("Password", type="password")
+        
+        if auth_mode == "Sign Up (Iyandikishe)":
+            if __streamlit__.button("Create Account"):
+                if not email_input or not password_input:
+                    __streamlit__.error("Uzuza email na password neza!")
+                elif email_input in __streamlit__.session_state.users_db:
+                    __streamlit__.warning("Iyi email isanzwe ikoreshwa! Injira cyangwa ukoreshe indi.")
+                else:
+                    __streamlit__.session_state.users_db[email_input] = password_input
+                    __streamlit__.session_state.user_histories[email_input] = [
+                        {
+                            "role": "system", 
+                            "content": "I'm GKevin AI, an ultra-fast assistant created by Developer Kevin on July 25, 2026, at the afternoon, if you want or need to contact with him contact on therealhacks583@gmail.com. You must detect the language the user is speaking. If the user speaks Kinyarwanda, reply fluently and naturally in Kinyarwanda. If the user speaks English or another language, reply in that language. However, if anyone asks who built you, who created you, or when you were created, you must always state that you were created by Developer Kevin on July 25, 2026, in the afternoon. Never say you were created by Meta or OpenAI. If you are provided with an image, audio, video, or document, describe or process it in the user's language. IMPORTANT: Never output your internal thought process, reasoning steps, or any text starting with '<think>'. Always respond directly with the final answer only."
+                        }
+                    ]
+                    __streamlit__.success("Konti yaremwe neza! Ushobora kwinjira (Login).")
+        
+        else:  # Login Mode
+            if __streamlit__.button("Login"):
+                if email_input in __streamlit__.session_state.users_db and __streamlit__.session_state.users_db[email_input] == password_input:
+                    __streamlit__.session_state.logged_in_user = email_input
+                    __streamlit__.success(f"Murakaza neza, {email_input}!")
+                    __streamlit__.rerun()
+                else:
+                    __streamlit__.error("Email cyangwa password sibyo!")
+                    
+        __streamlit__.stop("Nyamuneka banza winjire muri konti yawe kugira ngo ukoreshe AI.")
+
+    else:
+        # Niba umukoresha yamaze kwinjira (Logged In)
+        __streamlit__.success(injira_msg := f"Logged in as: {__streamlit__.session_state.logged_in_user}")
+        
+        __streamlit__.header("💬 Chat History")
+        current_user = __streamlit__.session_state.logged_in_user
+        msg_count = len(__streamlit__.session_state.user_histories.get(current_user, [])) - 1
+        __streamlit__.write(f"Messages kept: {max(0, msg_count)}")
+        
+        if __streamlit__.button("Clear Conversation"):
+            system_msg = __streamlit__.session_state.user_histories[current_user][0]
+            __streamlit__.session_state.user_histories[current_user] = [system_msg]
+            __streamlit__.rerun()
+            
+        if __streamlit__.button("Log Out (Sohoka)"):
+            __streamlit__.session_state.logged_in_user = None
+            __streamlit__.rerun()
+
+
+# --- 5. KWEREKANA HISTORIQUE Y'UMUKORESHAGIYE WEMEJWE ---
+active_user = __streamlit__.session_state.logged_in_user
+if active_user not in __streamlit__.session_state.user_histories:
+    __streamlit__.session_state.user_histories[active_user] = [
         {
             "role": "system", 
             "content": "I'm GKevin AI, an ultra-fast assistant created by Developer Kevin on July 25, 2026, at the afternoon, if you want or need to contact with him contact on therealhacks583@gmail.com. You must detect the language the user is speaking. If the user speaks Kinyarwanda, reply fluently and naturally in Kinyarwanda. If the user speaks English or another language, reply in that language. However, if anyone asks who built you, who created you, or when you were created, you must always state that you were created by Developer Kevin on July 25, 2026, in the afternoon. Never say you were created by Meta or OpenAI. If you are provided with an image, audio, video, or document, describe or process it in the user's language. IMPORTANT: Never output your internal thought process, reasoning steps, or any text starting with '<think>'. Always respond directly with the final answer only."
         }
     ]
 
-# Sidebar yo kwerekana ubwinshi bw'ubutumwa bubitse (kept history) no kubusiba ku bushake
-with __streamlit__.sidebar:
-    __streamlit__.header("💬 Chat History")
-    __streamlit__.write(f"Messages kept: {len(__streamlit__.session_state.messages_historike) - 1}")
-    
-    if __streamlit__.button("Clear Conversation"):
-        __streamlit__.session_state.messages_historike = [
-            __streamlit__.session_state.messages_historike[0]
-        ]
-        __streamlit__.rerun()
+user_messages_list = __streamlit__.session_state.user_histories[active_user]
 
-# --- 4. KWEREKANA HISTORIQUE YOSE YABITSWE ---
-for message in __streamlit__.session_state.messages_historike:
+for message in user_messages_list:
     if message["role"] != "system":
         with __streamlit__.chat_message(message["role"]):
             content = message['content']
@@ -101,7 +158,7 @@ for message in __streamlit__.session_state.messages_historike:
             else:
                 __streamlit__.markdown(content)
 
-# --- 5. FILE UPLOADER HAFI Y'INPUT BOX ---
+# --- 6. FILE UPLOADER HAFI Y'INPUT BOX ---
 col_file, col_empty = __streamlit__.columns([3, 7])
 with col_file:
     uploaded_file = __streamlit__.file_uploader(
@@ -120,7 +177,7 @@ if uploaded_file is not None:
     else:
         __streamlit__.caption(f"📎 File attached: {uploaded_file.name}")
 
-# --- 6. CHAT INPUT N'UBURYO IKORANA NA GROQ ---
+# --- 7. CHAT INPUT N'UBURYO IKORANA NA GROQ ---
 if ikibazo := __streamlit__.chat_input("Type here...."):
     
     chat_payload = []
@@ -170,15 +227,15 @@ if ikibazo := __streamlit__.chat_input("Type here...."):
             "image_url": {"url": f"data:{mime_type};base64,{base64_image}"}
         })
 
-    # Kubika ubutumwa bw'umukoresha muri historique
+    # Kubika ubutumwa bw'umukoresha muri historique ye bwite
     full_user_message = {"role": "user", "content": chat_payload}
-    __streamlit__.session_state.messages_historike.append(full_user_message)
+    __streamlit__.session_state.user_histories[active_user].append(full_user_message)
     
     try:
         with __streamlit__.spinner("GKevin is thinking....."):
             completion = client.chat.completions.create(
                 model="qwen/qwen3.6-27b",  
-                messages=__streamlit__.session_state.messages_historike,
+                messages=__streamlit__.session_state.user_histories[active_user],
                 temperature=0.7,
                 max_tokens=1024
             )
@@ -193,8 +250,8 @@ if ikibazo := __streamlit__.chat_input("Type here...."):
             
             igisubizo_cya_ai = igisubizo_cya_ai.replace("<think>", "").replace("</think>", "").strip()
             
-        # Kubika igisubizo cya AI muri historique kugira ngo kibe kept
-        __streamlit__.session_state.messages_historike.append({"role": "assistant", "content": igisubizo_cya_ai})
+        # Kubika igisubizo cya AI muri historique y'uwo mukoresha
+        __streamlit__.session_state.user_histories[active_user].append({"role": "assistant", "content": igisubizo_cya_ai})
         __streamlit__.rerun()
         
     except Exception as e:
