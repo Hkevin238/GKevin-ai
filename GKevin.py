@@ -261,7 +261,7 @@ if ikibazo := __streamlit__.chat_input("Type here...."):
     try:
         with __streamlit__.spinner("GKevin is thinking....."):
             completion = client.chat.completions.create(
-                model="llama3-70b-8192",  
+                model="llama-3.3-70b-versatile",  # Hinduwe kuri active model igezweho kuri Groq
                 messages=__streamlit__.session_state.user_histories[active_user],
                 temperature=0.7,
                 max_tokens=1024
@@ -287,4 +287,4 @@ if ikibazo := __streamlit__.chat_input("Type here...."):
         __streamlit__.rerun()
         
     except Exception as e:
-        pass
+        __streamlit__.error(f"Haba habaye ikibazo: {e}")
