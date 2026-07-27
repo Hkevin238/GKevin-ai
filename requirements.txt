@@ -1,2 +1,6 @@
 openai
 streamlit
+streamlit
+openai
+pillow
+pypdf
