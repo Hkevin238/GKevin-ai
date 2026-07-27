@@ -4,6 +4,13 @@ import base64
 from PIL import Image
 import io
 import pypdf
+from supabase import create_client, Client
+
+# --- HUZA NA SUPABASE ---
+SUPABASE_URL = "https://yniflglkrwcflkipdoha.supabase.co"
+SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InluaWZsZ2tyd2NmcWxraXBkb2hhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUxNjM3MjIsImV4cCI6MjEwMDczOTcyMn0.HfI-WiXJkUErR_aG2mtHqinxV_-L5D2vLRgLuX3dp2M"
+
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 # --- 1. PAGE CONFIG ---
 __streamlit__.set_page_config(
@@ -15,7 +22,6 @@ __streamlit__.set_page_config(
 # --- CSS YA CHATGPT-LIKE HAMWE N'ANIMATION (FLOATING & SOFT RAINBOW BG) ---
 st_css = """
 <style>
-    /* Uburyo background yihindura buhoro buhoro mu mabara y'umukororbya yoroshye */
     @keyframes softRainbowBg {
         0% { background-color: #1a1a2e; }
         25% { background-color: #1f1a24; }
@@ -28,7 +34,6 @@ st_css = """
         animation: softRainbowBg 15s ease infinite;
     }
 
-    /* Uburyo bwo kuzamura no kumanika ijambo ry'imitwe (Floating Animation) */
     @keyframes floatUpDown {
         0% { transform: translateY(0px); }
         50% { transform: translateY(-8px); }
@@ -41,7 +46,6 @@ st_css = """
         color: #ffffff;
     }
 
-    /* Gukora ngo input box igororoke nkiya ChatGPT */
     div[data-testid="stChatInput"] {
         border-radius: 8px !important;
         border: 1px solid #ccc;
@@ -53,7 +57,6 @@ st_css = """
 """
 __streamlit__.markdown(st_css, unsafe_allow_html=True)
 
-# Gukoresha HTML na CSS kugira ngo Title igende izamuka imanuka idahagarara
 __streamlit__.markdown(
     '<h1 class="animated-title">🤖 GKevin AI Assistant</h1>', 
     unsafe_allow_html=True
@@ -66,15 +69,12 @@ client = OpenAI(
     api_key="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"
 )
 
-# --- 3. DATABASE Y'ABAKORESHA (USER ACCOUNTS DATABASE) MURI SESSION STATE ---
-if "users_db" not in __streamlit__.session_state:
-    __streamlit__.session_state.users_db = {}  # {email: password}
-
+# --- 3. SESSION STATE Y'ABAKORESHA BINJIYE ---
 if "logged_in_user" not in __streamlit__.session_state:
     __streamlit__.session_state.logged_in_user = None
 
 if "user_histories" not in __streamlit__.session_state:
-    __streamlit__.session_state.user_histories = {}  # {email: messages_list}
+    __streamlit__.session_state.user_histories = {}
 
 
 # --- 4. AUTHENTICATION (LOGIN & SIGN UP SIDEBAR) ---
@@ -90,27 +90,40 @@ with __streamlit__.sidebar:
         if auth_mode == "Sign Up":
             if __streamlit__.button("Create Account"):
                 if not email_input or not password_input:
-                    __streamlit__.error("Please email and password aren't correct!")
-                elif email_input in __streamlit__.session_state.users_db:
-                    __streamlit__.warning("This email exist! Please login with else.")
+                    __streamlit__.error("Please enter email and password!")
                 else:
-                    __streamlit__.session_state.users_db[email_input] = password_input
-                    __streamlit__.session_state.user_histories[email_input] = [
-                        {
-                            "role": "system", 
-                            "content": "I'm GKevin AI, an ultra-fast assistant created by Developer Kevin on July 25, 2026, at the afternoon, if you want or need to contact with him contact on therealhacks583@gmail.com. You must detect the language the user is speaking. If the user speaks Kinyarwanda, reply fluently and naturally in Kinyarwanda. If the user speaks English or another language, reply in that language. However, if anyone asks who built you, who created you, or when you were created, you must always state that you were created by Developer Kevin on July 25, 2026, in the afternoon. Never say you were created by Meta or OpenAI. If you are provided with an image, audio, video, or document, describe or process it in the user's language. IMPORTANT: Never output your internal thought process, reasoning steps, or any text starting with '<think>'. Always respond directly with the final answer only."
-                        }
-                    ]
-                    __streamlit__.success("Account Created Successfully! You can (Login).")
+                    try:
+                        # Reba niba email isanzwe muri Supabase
+                        existing_user = supabase.table("users").select("*").eq("email", email_input).execute()
+                        if existing_user.data:
+                            __streamlit__.warning("This email exist! Please login with else.")
+                        else:
+                            # Bika umukoresha mushya muri Supabase Database
+                            supabase.table("users").insert({
+                                "email": email_input,
+                                "password": password_input
+                            }).execute()
+                            
+                            __streamlit__.success("Account Created Successfully! You can (Login).")
+                    except Exception as e:
+                        __streamlit__.error(f"Error connecting to database: {e}")
         
         else:  # Login Mode
             if __streamlit__.button("Login"):
-                if email_input in __streamlit__.session_state.users_db and __streamlit__.session_state.users_db[email_input] == password_input:
-                    __streamlit__.session_state.logged_in_user = email_input
-                    __streamlit__.success(f"Your Welcome !, {email_input}!")
-                    __streamlit__.rerun()
+                if not email_input or not password_input:
+                    __streamlit__.error("Enter email and password!")
                 else:
-                    __streamlit__.error("Email or password is incorrect!")
+                    try:
+                        # Shakisha muri Supabase niba email na password bihuye
+                        res = supabase.table("users").select("*").eq("email", email_input).eq("password", password_input).execute()
+                        if res.data:
+                            __streamlit__.session_state.logged_in_user = email_input
+                            __streamlit__.success(f"Your Welcome !, {email_input}!")
+                            __streamlit__.rerun()
+                        else:
+                            __streamlit__.error("Email or password is incorrect!")
+                    except Exception as e:
+                        __streamlit__.error(f"Error connecting to database: {e}")
                     
         __streamlit__.info("Please Sign in into your account in order to access GKevin AI Assistant.")
         __streamlit__.stop()
@@ -119,6 +132,18 @@ with __streamlit__.sidebar:
         # Niba umukoresha yamaze kwinjira (Logged In)
         __streamlit__.success(f"Logged in as: {__streamlit__.session_state.logged_in_user}")
         
+        # --- ADMIN PANEL (Iboneza ry'umuhanzi/admin niba ari wowe) ---
+        if __streamlit__.session_state.logged_in_user == "therealhacks583@gmail.com":
+            __streamlit__.markdown("---")
+            __streamlit__.subheader("🛠️ Admin Panel")
+            if __streamlit__.button("Reba Abakoresha Bose (Supabase Users)"):
+                try:
+                    all_users = supabase.table("users").select("*").execute()
+                    __streamlit__.dataframe(all_users.data)
+                except Exception as e:
+                    __streamlit__.error(f"Could not fetch users: {e}")
+            __streamlit__.markdown("---")
+
         __streamlit__.header("💬 Chat History")
         current_user = __streamlit__.session_state.logged_in_user
         msg_count = len(__streamlit__.session_state.user_histories.get(current_user, [])) - 1
@@ -134,7 +159,7 @@ with __streamlit__.sidebar:
             __streamlit__.rerun()
 
 
-# --- 5. KWEREKANA HISTORIQUE Y'UMUKORESHAGIYE WEMEJWE ---
+# --- 5. KWEREKANA HISTORIQUE Y'UMUKORESHI WEMEJWE ---
 active_user = __streamlit__.session_state.logged_in_user
 if active_user not in __streamlit__.session_state.user_histories:
     __streamlit__.session_state.user_histories[active_user] = [
@@ -228,7 +253,6 @@ if ikibazo := __streamlit__.chat_input("Type here...."):
             "image_url": {"url": f"data:{mime_type};base64,{base64_image}"}
         })
 
-    # Kubika ubutumwa bw'umukoresha muri historique ye bwite
     full_user_message = {"role": "user", "content": chat_payload}
     __streamlit__.session_state.user_histories[active_user].append(full_user_message)
     
@@ -243,7 +267,6 @@ if ikibazo := __streamlit__.chat_input("Type here...."):
             
             igisubizo_cya_ai = completion.choices[0].message.content
             
-            # Gukumira burundu <think> tag
             if "<think>" in igisubizo_cya_ai:
                 parts = igisubizo_cya_ai.split("</think>")
                 if len(parts) > 1:
@@ -251,7 +274,6 @@ if ikibazo := __streamlit__.chat_input("Type here...."):
             
             igisubizo_cya_ai = igisubizo_cya_ai.replace("<think>", "").replace("</think>", "").strip()
             
-        # Kubika igisubizo cya AI muri historique y'uwo mukoresha
         __streamlit__.session_state.user_histories[active_user].append({"role": "assistant", "content": igisubizo_cya_ai})
         __streamlit__.rerun()
         
