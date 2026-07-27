@@ -7,13 +7,52 @@ import pypdf
 
 # --- 1. PAGE CONFIG ---
 __streamlit__.set_page_config(
-    page_title="GKevin AI Chatbot",
+    page_title="GKevin AI Assistant",
     page_icon="🤖",
     layout="centered"
 )
 
-__streamlit__.title("🤖 GKevin AI Assistant")
-__streamlit__.write("Welcome! This chatbot is built using the Streamlit Chatbot template.")
+# --- CSS YA CHATGPT-LIKE HAMWE N'ANIMATION YO KUJYAMBA NO KUMANUKA (FLOATING EFFECT) ---
+st_css = """
+<style>
+    /* Uburyo bwo kuzamura no kumanika ijambo ry'imitwe (Floating Animation) */
+    @keyframes floatUpDown {
+        0% {
+            transform: translateY(0px);
+        }
+        50% {
+            transform: translateY(-8px);
+        }
+        100% {
+            transform: translateY(0px);
+        }
+    }
+
+    /* Gushyira animation kuri Title cyangwa class yihariye */
+    .animated-title {
+        animation: floatUpDown 2.5s ease-in-out infinite;
+        display: inline-block;
+        color: #ffffff;
+    }
+
+    /* Gukora ngo input box igororoke nkiya ChatGPT */
+    div[data-testid="stChatInput"] {
+        border-radius: 8px !important;
+        border: 1px solid #ccc;
+    }
+    div[data-testid="stChatInputSubmitButton"] {
+        border-radius: 0px !important;
+    }
+</style>
+"""
+__streamlit__.markdown(st_css, unsafe_allow_html=True)
+
+# Gukoresha HTML na CSS kugira ngo Title igende izamuka imanuka idahagarara
+__streamlit__.markdown(
+    '<h1 class="animated-title">🤖 GKevin AI Assistant</h1>', 
+    unsafe_allow_html=True
+)
+__streamlit__.write("Welcome! This Assistant is built for helpful users.")
 
 # --- 2. HUZA NA GROQ API ---
 client = OpenAI(
@@ -53,7 +92,7 @@ for message in __streamlit__.session_state.messages_historike:
             else:
                 __streamlit__.markdown(content)
 
-# --- 5. FILE UPLOADER HAFI Y'INPUT BOX (NKA TEMPLATE) ---
+# --- 5. FILE UPLOADER HAFI Y'INPUT BOX ---
 col_file, col_empty = __streamlit__.columns([3, 7])
 with col_file:
     uploaded_file = __streamlit__.file_uploader(
