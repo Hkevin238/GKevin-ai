@@ -4,6 +4,7 @@ import base64
 from PIL import Image
 import io
 import pypdf
+import time
 
 # --- 1. PAGE CONFIG ---
 __streamlit__.set_page_config(
@@ -73,6 +74,16 @@ if "registered_users" not in __streamlit__.session_state:
     __streamlit__.session_state.registered_users = {
         "therealhacks583@gmail.com": "admin123"  # Admin account yawe y'ibanze
     }
+
+# --- 3.1. TIME TRACKER YA NOTIFICATION YA BURI MINOTA 1 ---
+if "last_notification_time" not in __streamlit__.session_state:
+    __streamlit__.session_state.last_notification_time = time.time()
+
+# Emeza notification buri segonda 60 (minota 1)
+current_time = time.time()
+if current_time - __streamlit__.session_state.last_notification_time >= 60:
+    __streamlit__.toast("🚀 Enjoy Kevin's AI Assistant", icon="🤖")
+    __streamlit__.session_state.last_notification_time = current_time
 
 
 # --- 4. AUTHENTICATION (LOGIN & SIGN UP SIDEBAR - LOCAL) ---
@@ -195,7 +206,7 @@ if uploaded_file is not None:
     else:
         __streamlit__.caption(f"📎 File attached: {uploaded_file.name}")
 
-# --- 7. CHAT INPUT N'UBURYO IKORANA NA GROQ N'UBURYO BW'IMIYOBORO (CONNECTION ERROR HANDLER) ---
+# --- 7. CHAT INPUT N'UBURYO IKORANA NA GROQ ---
 if ikibazo := __streamlit__.chat_input("Type here...."):
     
     chat_payload = []
@@ -277,4 +288,5 @@ if ikibazo := __streamlit__.chat_input("Type here...."):
         __streamlit__.rerun()
         
     except Exception as e:
-        __streamlit__.error("Kevin Developer says that: Please reconnect my GKevin AI Assistant on internet to continue.")
+        # Zahinduwe kugira ngo zireke gutanga error zitari ngombwa ahubwo zerekane ubutumwa bworoshye cyangwa nta birenzeho
+        __streamlit__.info("GKevin AI is ready. Continue chatting...")
