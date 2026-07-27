@@ -129,7 +129,7 @@ with __streamlit__.sidebar:
             __streamlit__.session_state.user_histories[current_user] = [system_msg]
             __streamlit__.rerun()
             
-        if __streamlit__.button("Log Out (Sohoka)"):
+        if __streamlit__.button("Log Out"):
             __streamlit__.session_state.logged_in_user = None
             __streamlit__.rerun()
 
