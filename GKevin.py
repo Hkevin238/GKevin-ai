@@ -4,13 +4,6 @@ import base64
 from PIL import Image
 import io
 import pypdf
-from supabase import create_client, Client
-
-# --- HUZA NA SUPABASE ---
-SUPABASE_URL = "https://yniflglkrwcflkipdoha.supabase.co"
-SUPABASE_KEY = "sb_publishable_jJaxDn_x891WJBuBu_YDAg_Fjf6xeol"
-
-supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 # --- 1. PAGE CONFIG ---
 __streamlit__.set_page_config(
@@ -69,15 +62,21 @@ client = OpenAI(
     api_key="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"
 )
 
-# --- 3. SESSION STATE Y'ABAKORESHA BINJIYE ---
+# --- 3. SESSION STATE Y'ABAKORESHA BINJIYE N'UBURYO BWO KWANDIKISHA (LOCAL MEMORY) ---
 if "logged_in_user" not in __streamlit__.session_state:
     __streamlit__.session_state.logged_in_user = None
 
 if "user_histories" not in __streamlit__.session_state:
     __streamlit__.session_state.user_histories = {}
 
+# Guvura accounts zibitswe muri app ubwayo kugira ngo hatabaho error za database
+if "registered_users" not in __streamlit__.session_state:
+    __streamlit__.session_state.registered_users = {
+        "therealhacks583@gmail.com": "admin123"  # Admin account yawe y'ibanze
+    }
 
-# --- 4. AUTHENTICATION (LOGIN & SIGN UP SIDEBAR) ---
+
+# --- 4. AUTHENTICATION (LOGIN & SIGN UP SIDEBAR - LOCAL) ---
 with __streamlit__.sidebar:
     __streamlit__.header("🔐 GKevin AI Assistant Account Authentication")
     
@@ -92,38 +91,25 @@ with __streamlit__.sidebar:
                 if not email_input or not password_input:
                     __streamlit__.error("Please enter email and password!")
                 else:
-                    try:
-                        # Reba niba email isanzwe muri Supabase
-                        existing_user = supabase.table("users").select("*").eq("email", email_input).execute()
-                        if existing_user.data:
-                            __streamlit__.warning("This email exist! Please login with else.")
-                        else:
-                            # Bika umukoresha mushya muri Supabase Database
-                            supabase.table("users").insert({
-                                "email": email_input,
-                                "password": password_input
-                            }).execute()
-                            
-                            __streamlit__.success("Account Created Successfully! You can (Login).")
-                    except Exception as e:
-                        __streamlit__.error(f"Error connecting to database: {e}")
+                    if email_input in __streamlit__.session_state.registered_users:
+                        __streamlit__.warning("This email already exists! Please login.")
+                    else:
+                        # Bika umukoresha muri local session state nta database isabwe
+                        __streamlit__.session_state.registered_users[email_input] = password_input
+                        __streamlit__.success("Account Created Successfully! You can now (Login).")
         
         else:  # Login Mode
             if __streamlit__.button("Login"):
                 if not email_input or not password_input:
                     __streamlit__.error("Enter email and password!")
                 else:
-                    try:
-                        # Shakisha muri Supabase niba email na password bihuye
-                        res = supabase.table("users").select("*").eq("email", email_input).eq("password", password_input).execute()
-                        if res.data:
-                            __streamlit__.session_state.logged_in_user = email_input
-                            __streamlit__.success(f"Your Welcome !, {email_input}!")
-                            __streamlit__.rerun()
-                        else:
-                            __streamlit__.error("Email or password is incorrect!")
-                    except Exception as e:
-                        __streamlit__.error(f"Error connecting to database: {e}")
+                    # Reba niba email ihari kandi password ihuye niyo yatanze
+                    if email_input in __streamlit__.session_state.registered_users and __streamlit__.session_state.registered_users[email_input] == password_input:
+                        __streamlit__.session_state.logged_in_user = email_input
+                        __streamlit__.success(f"You're Welcome !, {email_input}!")
+                        __streamlit__.rerun()
+                    else:
+                        __streamlit__.error("Incorrect email or password!")
                     
         __streamlit__.info("Please Sign in into your account in order to access GKevin AI Assistant.")
         __streamlit__.stop()
@@ -136,12 +122,8 @@ with __streamlit__.sidebar:
         if __streamlit__.session_state.logged_in_user == "therealhacks583@gmail.com":
             __streamlit__.markdown("---")
             __streamlit__.subheader("🛠️ Admin Panel")
-            if __streamlit__.button("Reba Abakoresha Bose (Supabase Users)"):
-                try:
-                    all_users = supabase.table("users").select("*").execute()
-                    __streamlit__.dataframe(all_users.data)
-                except Exception as e:
-                    __streamlit__.error(f"Could not fetch users: {e}")
+            if __streamlit__.button("Reba Abakoresha Bose (Local Users)"):
+                __streamlit__.json(__streamlit__.session_state.registered_users)
             __streamlit__.markdown("---")
 
         __streamlit__.header("💬 Chat History")
