@@ -51,7 +51,7 @@ if "messages_historike" not in __streamlit__.session_state:
     __streamlit__.session_state.messages_historike = [
         {
             "role": "system", 
-            "content": "I'm GKevin AI, an ultra-fast assistant created by Developer Kevin on July 25, 2026, at the afternoon, if you want or need to contact with him contact on therealhacks583@gmail.com. You must detect the language the user is speaking. If the user speaks Kinyarwanda, reply fluently and naturally in Kinyarwanda. If the user speaks English or another language, reply in that language. However, if anyone asks who built you, who created you, or when you were created, you must always state that you were created by Developer Kevin on July 25, 2026, in the afternoon. Never say you were created by Meta or OpenAI. If you are provided with an image or document, describe, analyze, or process what is in it in the language the user is currently using. IMPORTANT: Never output your internal thought process, reasoning steps, or any text starting with '<think>'. Always respond directly with the final answer only."
+            "content": "I'm GKevin AI, an ultra-fast assistant created by Developer Kevin on July 25, 2026, at the afternoon, if you want or need to contact with him contact on therealhacks583@gmail.com. You must detect the language the user is speaking. If the user speaks Kinyarwanda, reply fluently and naturally in Kinyarwanda. If the user speaks English or another language, reply in that language. However, if anyone asks who built you, who created you, or when you were created, you must always state that you were created by Developer Kevin on July 25, 2026, in the afternoon. Never say you were created by Meta or OpenAI. If you are provided with an image, audio, video, or document, describe, analyze, or process what is in it in the language the user is currently using. IMPORTANT: Never output your internal thought process, reasoning steps, or any text starting with '<think>'. Always respond directly with the final answer only."
         }
     ]
 
@@ -78,28 +78,35 @@ for message in __streamlit__.session_state.messages_historike:
             else:
                 __streamlit__.markdown(content)
 
-# --- 6. UTILITY YA FILE UPLOAD EGEREYE INPUT BOX ---
-# Gukoresha columns kugira ngo 'plus' cyangwa file uploader ize hafi y'aho wandikira cyangwa hejuru yayo
+# --- 6. UTILITY YA FILE/AUDIO/VIDEO UPLOADER EGEREYE INPUT BOX ---
 col_file, col_empty = __streamlit__.columns([3, 7])
 with col_file:
     uploaded_file = __streamlit__.file_uploader(
-        "➕ Attach File", 
-        type=["png", "jpg", "jpeg", "pdf", "txt", "csv", "docx"],
+        "➕ Attach File (Image, PDF, Audio, Video)", 
+        type=["png", "jpg", "jpeg", "pdf", "txt", "csv", "docx", "mp3", "wav", "mp4", "mov"],
         label_visibility="collapsed"
     )
 
+# Kwerekana icyo umukoresha yashyizemo mbere y'uko yandika
 if uploaded_file is not None:
     if uploaded_file.type.startswith("image/"):
         __streamlit__.caption(f"🖼️ Image attached: {uploaded_file.name}")
+    elif uploaded_file.type.startswith("audio/"):
+        __streamlit__.audio(uploaded_file)
+        __streamlit__.caption(f"🎵 Audio attached: {uploaded_file.name}")
+    elif uploaded_file.type.startswith("video/"):
+        __streamlit__.video(uploaded_file)
+        __streamlit__.caption(f"🎬 Video attached: {uploaded_file.name}")
     else:
         __streamlit__.caption(f"📎 File attached: {uploaded_file.name}")
 
-# 7. Gufata ubutumwa bw'umukoresha n'amafayili
+# 7. Gufata ubutumwa bw'umukoresha n'amafayili (Images, Audio, Video, Documents)
 if ikibazo := __streamlit__.chat_input("Type here...."):
     
     chat_payload = []
     file_text_content = ""
     
+    # Gusoma text cyangwa PDF
     if uploaded_file is not None:
         if uploaded_file.type == "application/pdf":
             try:
@@ -110,17 +117,30 @@ if ikibazo := __streamlit__.chat_input("Type here...."):
                 file_text_content = f"[Error reading PDF: {e}]"
         elif uploaded_file.type == "text/plain":
             file_text_content = uploaded_file.getvalue().decode("utf-8")
+        elif uploaded_file.type.startswith("audio/"):
+            file_text_content = f"[Attached Audio File: {uploaded_file.name}]"
+        elif uploaded_file.type.startswith("video/"):
+            file_text_content = f"[Attached Video File: {uploaded_file.name}]"
         elif uploaded_file.type in ["application/vnd.openxmlformats-officedocument.wordprocessingml.document", "text/csv"]:
             file_text_content = f"[Attached Document: {uploaded_file.name}]"
 
     full_query = ikibazo
     if file_text_content and not uploaded_file.type.startswith("image/"):
-        full_query = f"{ikibazo}\n\nHere is the content of the attached file ({uploaded_file.name}):\n{file_text_content}"
+        full_query = f"{ikibazo}\n\nHere is information about the attached file ({uploaded_file.name}):\n{file_text_content}"
 
     if full_query:
         __streamlit__.chat_message("user").markdown(ikibazo)
+        
+        # Kwerekana Audio cyangwa Video muri chat history niba yoherejwe
+        if uploaded_file is not None:
+            if uploaded_file.type.startswith("audio/"):
+                __streamlit__.audio(uploaded_file)
+            elif uploaded_file.type.startswith("video/"):
+                __streamlit__.video(uploaded_file)
+                
         chat_payload.append({"type": "text", "text": full_query})
 
+    # Niba ari ifoto, yongeremo nka image_url
     if uploaded_file is not None and uploaded_file.type.startswith("image/"):
         with __streamlit__.chat_message("user"):
             __streamlit__.image(uploaded_file)
@@ -148,6 +168,7 @@ if ikibazo := __streamlit__.chat_input("Type here...."):
             
             igisubizo_cya_ai = completion.choices[0].message.content
             
+            # Gukuraho burundu <think> niba yaje
             if "<think>" in igisubizo_cya_ai:
                 parts = igisubizo_cya_ai.split("</think>")
                 if len(parts) > 1:
