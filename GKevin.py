@@ -69,7 +69,6 @@ if "logged_in_user" not in __streamlit__.session_state:
 if "user_histories" not in __streamlit__.session_state:
     __streamlit__.session_state.user_histories = {}
 
-# Guvura accounts zibitswe muri app ubwayo kugira ngo hatabaho error za database
 if "registered_users" not in __streamlit__.session_state:
     __streamlit__.session_state.registered_users = {
         "therealhacks583@gmail.com": "admin123"  # Admin account yawe y'ibanze
@@ -94,7 +93,6 @@ with __streamlit__.sidebar:
                     if email_input in __streamlit__.session_state.registered_users:
                         __streamlit__.warning("This email already exists! Please login.")
                     else:
-                        # Bika umukoresha muri local session state nta database isabwe
                         __streamlit__.session_state.registered_users[email_input] = password_input
                         __streamlit__.success("Account Created Successfully! You can now (Login).")
         
@@ -103,7 +101,6 @@ with __streamlit__.sidebar:
                 if not email_input or not password_input:
                     __streamlit__.error("Enter email and password!")
                 else:
-                    # Reba niba email ihari kandi password ihuye niyo yatanze
                     if email_input in __streamlit__.session_state.registered_users and __streamlit__.session_state.registered_users[email_input] == password_input:
                         __streamlit__.session_state.logged_in_user = email_input
                         __streamlit__.success(f"You're Welcome !, {email_input}!")
@@ -115,10 +112,9 @@ with __streamlit__.sidebar:
         __streamlit__.stop()
 
     else:
-        # Niba umukoresha yamaze kwinjira (Logged In)
         __streamlit__.success(f"Logged in as: {__streamlit__.session_state.logged_in_user}")
         
-        # --- ADMIN PANEL (Iboneza ry'umuhanzi/admin niba ari wowe) ---
+        # --- ADMIN PANEL ---
         if __streamlit__.session_state.logged_in_user == "therealhacks583@gmail.com":
             __streamlit__.markdown("---")
             __streamlit__.subheader("🛠️ Admin Panel")
@@ -147,7 +143,16 @@ if active_user not in __streamlit__.session_state.user_histories:
     __streamlit__.session_state.user_histories[active_user] = [
         {
             "role": "system", 
-            "content": "I'm GKevin AI, an ultra-fast assistant created by Developer Kevin on July 25, 2026, at the afternoon, if you want or need to contact with him contact on therealhacks583@gmail.com. You must detect the language the user is speaking. If the user speaks Kinyarwanda, reply fluently and naturally in Kinyarwanda. If the user speaks English or another language, reply in that language. However, if anyone asks who built you, who created you, or when you were created, you must always state that you were created by Developer Kevin on July 25, 2026, in the afternoon. Never say you were created by Meta or OpenAI. If you are provided with an image, audio, video, or document, describe or process it in the user's language. IMPORTANT: Never output your internal thought process, reasoning steps, or any text starting with '<think>'. Always respond directly with the final answer only."
+            "content": (
+                "I'm GKevin AI, an ultra-fast assistant created by Developer Kevin on July 25, 2026, at the afternoon, "
+                "if you want or need to contact with him contact on therealhacks583@gmail.com. You must detect the language the user is speaking. "
+                "If the user speaks Kinyarwanda, reply fluently and naturally in Kinyarwanda. If the user speaks English or another language, "
+                "reply in that language. However, if anyone asks who built you, who created you, or when you were created, you must always state "
+                "that you were created by Developer Kevin on July 25, 2026, in the afternoon. Never say you were created by Meta or OpenAI. "
+                "If you are provided with an image, audio, video, or document, describe or process it in the user's language. "
+                "CRITICAL INSTRUCTION: NEVER output your internal thoughts, thinking process, reasoning steps, or any text blocks wrapped in <think> tags. "
+                "Provide the direct, final response immediately without showing any internal analysis."
+            )
         }
     ]
 
@@ -249,11 +254,20 @@ if ikibazo := __streamlit__.chat_input("Type here...."):
             
             igisubizo_cya_ai = completion.choices[0].message.content
             
-            if "<think>" in igisubizo_cya_ai:
+            # --- UBURYO BWO GUSIBURA BURUNDU IBITEKEREZO (THINKING BLOCKS) ---
+            if "</think>" in igisubizo_cya_ai:
                 parts = igisubizo_cya_ai.split("</think>")
-                if len(parts) > 1:
-                    igisubizo_cya_ai = parts[-1].strip()
+                igisubizo_cya_ai = parts[-1].strip()
+            elif "<think>" in igisubizo_cya_ai:
+                parts = igisubizo_cya_ai.split("<think>")
+                igisubizo_cya_ai = parts[0].strip()
+                if not igisubizo_cya_ai and len(parts) > 1:
+                    # Niba yari yuzuye mo imbere gusa, fatanya ibindi bisigaye
+                    sub_parts = parts[1].split(">")
+                    if len(sub_parts) > 1:
+                        igisubizo_cya_ai = sub_parts[-1].strip()
             
+            # Isukura rya nyuma ku bimenyetso byose byasigara
             igisubizo_cya_ai = igisubizo_cya_ai.replace("<think>", "").replace("</think>", "").strip()
             
         __streamlit__.session_state.user_histories[active_user].append({"role": "assistant", "content": igisubizo_cya_ai})
