@@ -8,7 +8,7 @@ from supabase import create_client, Client
 
 # --- HUZA NA SUPABASE ---
 SUPABASE_URL = "https://yniflglkrwcflkipdoha.supabase.co"
-SUPABASE_KEY = "sb_publishable_jQMJqDjzAHO5pHdff9A2ZA_qEdUqVn2"
+SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InluaWZsZ2tyd2NmcWxraXBkb2hhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUxNjM3MjIsImV4cCI6MjEwMDczOTcyMn0.HfI-WiXJkUErR_aG2mtHqinxV_-L5D2vLRgLuX3dp2M"
 
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
