@@ -101,22 +101,23 @@ with __streamlit__.sidebar:
                             "content": "I'm GKevin AI, an ultra-fast assistant created by Developer Kevin on July 25, 2026, at the afternoon, if you want or need to contact with him contact on therealhacks583@gmail.com. You must detect the language the user is speaking. If the user speaks Kinyarwanda, reply fluently and naturally in Kinyarwanda. If the user speaks English or another language, reply in that language. However, if anyone asks who built you, who created you, or when you were created, you must always state that you were created by Developer Kevin on July 25, 2026, in the afternoon. Never say you were created by Meta or OpenAI. If you are provided with an image, audio, video, or document, describe or process it in the user's language. IMPORTANT: Never output your internal thought process, reasoning steps, or any text starting with '<think>'. Always respond directly with the final answer only."
                         }
                     ]
-                    __streamlit__.success("Konti yaremwe neza! Ushobora kwinjira (Login).")
+                    __streamlit__.success("Account Created Successfully! You can (Login).")
         
         else:  # Login Mode
             if __streamlit__.button("Login"):
                 if email_input in __streamlit__.session_state.users_db and __streamlit__.session_state.users_db[email_input] == password_input:
                     __streamlit__.session_state.logged_in_user = email_input
-                    __streamlit__.success(f"Murakaza neza, {email_input}!")
+                    __streamlit__.success(f"Your Welcome !, {email_input}!")
                     __streamlit__.rerun()
                 else:
-                    __streamlit__.error("Email cyangwa password sibyo!")
+                    __streamlit__.error("Email or password is incorrect!")
                     
-        __streamlit__.stop("Nyamuneka banza winjire muri konti yawe kugira ngo ukoreshe AI.")
+        __streamlit__.info("Please Sign in into your account in order to access GKevin AI Assistant.")
+        __streamlit__.stop()
 
     else:
         # Niba umukoresha yamaze kwinjira (Logged In)
-        __streamlit__.success(injira_msg := f"Logged in as: {__streamlit__.session_state.logged_in_user}")
+        __streamlit__.success(f"Logged in as: {__streamlit__.session_state.logged_in_user}")
         
         __streamlit__.header("💬 Chat History")
         current_user = __streamlit__.session_state.logged_in_user
