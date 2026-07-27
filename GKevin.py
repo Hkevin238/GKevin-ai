@@ -65,7 +65,7 @@ __streamlit__.markdown(
     '<h1 class="animated-title">🤖 GKevin AI Assistant</h1>', 
     unsafe_allow_html=True
 )
-__streamlit__.write("Welcome! This Assistant was built for You .")
+__streamlit__.write("This Assistant was built for You . WELCOME !")
 
 # --- 2. HUZA NA GROQ API ---
 client = OpenAI(
