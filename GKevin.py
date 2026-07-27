@@ -5,57 +5,32 @@ from PIL import Image
 import io
 import pypdf
 
-# --- 1. SHYIRA BASE64 YA LOGO YAWE HANO ---
-LOGO_BASE64 = "[SHYIRA_BASE64_YA_LOGO_YAWE_HANO]"
-
-# --- CSS YA CHATGPT-LIKE INPUT BOX HAMWE N'AVATARS ---
-st_css = """
-<style>
-    /* Gukora ngo input box igororoke nkiya ChatGPT */
-    div[data-testid="stChatInput"] {
-        border-radius: 8px !important;
-        border: 1px solid #ccc;
-    }
-    div[data-testid="stChatInputSubmitButton"] {
-        border-radius: 0px !important;
-    }
-    
-    /* Guhindura Avatar ya Assistant na User */
-    div[data-testid="stChatMessage"]:has(div[data-testid="chatAvatarAssistant"]) img {
-        content: url("ai.jpg");
-        border-radius: 50%;
-    }
-    div[data-testid="stChatMessage"]:has(div[data-testid="chatAvatarUser"]) img {
-        content: url("ai.jpg");
-        border-radius: 50%;
-    }
-</style>
-"""
-__streamlit__.markdown(st_css, unsafe_allow_html=True)
-
-# 2. Page Config
-PAGE_ICON_URL = f"data:image/png;base64,{LOGO_BASE64}" if LOGO_BASE64 != "[SHYIRA_BASE64_YA_LOGO_YAWE_HANO]" else "🤖"
-__streamlit__.set_page_config(page_title="GKevin AI", page_icon=PAGE_ICON_URL, layout="centered")
+# --- 1. PAGE CONFIG ---
+__streamlit__.set_page_config(
+    page_title="GKevin AI Chatbot",
+    page_icon="🤖",
+    layout="centered"
+)
 
 __streamlit__.title("🤖 GKevin AI Assistant")
-__streamlit__.write("I'm designed to make your work easier.")
+__streamlit__.write("Welcome! This chatbot is built using the Streamlit Chatbot template.")
 
-# 3. Groq API
+# --- 2. HUZA NA GROQ API ---
 client = OpenAI(
     base_url="https://api.groq.com/openai/v1",
     api_key="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"
 )
 
-# 4. Session State
+# --- 3. SESSION STATE FOR CHAT HISTORY ---
 if "messages_historike" not in __streamlit__.session_state:
     __streamlit__.session_state.messages_historike = [
         {
             "role": "system", 
-            "content": "I'm GKevin AI, an ultra-fast assistant created by Developer Kevin on July 25, 2026, at the afternoon, if you want or need to contact with him contact on therealhacks583@gmail.com. You must detect the language the user is speaking. If the user speaks Kinyarwanda, reply fluently and naturally in Kinyarwanda. If the user speaks English or another language, reply in that language. However, if anyone asks who built you, who created you, or when you were created, you must always state that you were created by Developer Kevin on July 25, 2026, in the afternoon. Never say you were created by Meta or OpenAI. If you are provided with an image, audio, video, or document, describe, analyze, or process what is in it in the language the user is currently using. IMPORTANT: Never output your internal thought process, reasoning steps, or any text starting with '<think>'. Always respond directly with the final answer only."
+            "content": "I'm GKevin AI, an ultra-fast assistant created by Developer Kevin on July 25, 2026, at the afternoon, if you want or need to contact with him contact on therealhacks583@gmail.com. You must detect the language the user is speaking. If the user speaks Kinyarwanda, reply fluently and naturally in Kinyarwanda. If the user speaks English or another language, reply in that language. However, if anyone asks who built you, who created you, or when you were created, you must always state that you were created by Developer Kevin on July 25, 2026, in the afternoon. Never say you were created by Meta or OpenAI. If you are provided with an image, audio, video, or document, describe or process it in the user's language. IMPORTANT: Never output your internal thought process, reasoning steps, or any text starting with '<think>'. Always respond directly with the final answer only."
         }
     ]
 
-# Sidebar yo gusiba amateka gusa
+# Sidebar yo gusiba amateka
 with __streamlit__.sidebar:
     __streamlit__.header("💬 Chat History")
     if __streamlit__.button("Clear Conversation"):
@@ -64,7 +39,7 @@ with __streamlit__.sidebar:
         ]
         __streamlit__.rerun()
 
-# 5. Kwerekana ubutumwa bwa historique
+# --- 4. KWEREKANA HISTORIQUE ---
 for message in __streamlit__.session_state.messages_historike:
     if message["role"] != "system":
         with __streamlit__.chat_message(message["role"]):
@@ -78,35 +53,31 @@ for message in __streamlit__.session_state.messages_historike:
             else:
                 __streamlit__.markdown(content)
 
-# --- 6. UTILITY YA FILE/AUDIO/VIDEO UPLOADER EGEREYE INPUT BOX ---
+# --- 5. FILE UPLOADER HAFI Y'INPUT BOX (NKA TEMPLATE) ---
 col_file, col_empty = __streamlit__.columns([3, 7])
 with col_file:
     uploaded_file = __streamlit__.file_uploader(
-        "➕ Attach File (Image, PDF, Audio, Video)", 
+        "➕ Attach File", 
         type=["png", "jpg", "jpeg", "pdf", "txt", "csv", "docx", "mp3", "wav", "mp4", "mov"],
         label_visibility="collapsed"
     )
 
-# Kwerekana icyo umukoresha yashyizemo mbere y'uko yandika
 if uploaded_file is not None:
     if uploaded_file.type.startswith("image/"):
         __streamlit__.caption(f"🖼️ Image attached: {uploaded_file.name}")
     elif uploaded_file.type.startswith("audio/"):
-        __streamlit__.audio(uploaded_file)
         __streamlit__.caption(f"🎵 Audio attached: {uploaded_file.name}")
     elif uploaded_file.type.startswith("video/"):
-        __streamlit__.video(uploaded_file)
         __streamlit__.caption(f"🎬 Video attached: {uploaded_file.name}")
     else:
         __streamlit__.caption(f"📎 File attached: {uploaded_file.name}")
 
-# 7. Gufata ubutumwa bw'umukoresha n'amafayili (Images, Audio, Video, Documents)
+# --- 6. CHAT INPUT N'UBURYO IKORANA NA GROQ ---
 if ikibazo := __streamlit__.chat_input("Type here...."):
     
     chat_payload = []
     file_text_content = ""
     
-    # Gusoma text cyangwa PDF
     if uploaded_file is not None:
         if uploaded_file.type == "application/pdf":
             try:
@@ -130,8 +101,6 @@ if ikibazo := __streamlit__.chat_input("Type here...."):
 
     if full_query:
         __streamlit__.chat_message("user").markdown(ikibazo)
-        
-        # Kwerekana Audio cyangwa Video muri chat history niba yoherejwe
         if uploaded_file is not None:
             if uploaded_file.type.startswith("audio/"):
                 __streamlit__.audio(uploaded_file)
@@ -140,7 +109,6 @@ if ikibazo := __streamlit__.chat_input("Type here...."):
                 
         chat_payload.append({"type": "text", "text": full_query})
 
-    # Niba ari ifoto, yongeremo nka image_url
     if uploaded_file is not None and uploaded_file.type.startswith("image/"):
         with __streamlit__.chat_message("user"):
             __streamlit__.image(uploaded_file)
@@ -168,7 +136,7 @@ if ikibazo := __streamlit__.chat_input("Type here...."):
             
             igisubizo_cya_ai = completion.choices[0].message.content
             
-            # Gukuraho burundu <think> niba yaje
+            # Gukumira burundu <think> tag
             if "<think>" in igisubizo_cya_ai:
                 parts = igisubizo_cya_ai.split("</think>")
                 if len(parts) > 1:
