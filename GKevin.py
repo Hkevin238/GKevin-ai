@@ -12,9 +12,23 @@ __streamlit__.set_page_config(
     layout="centered"
 )
 
-# --- CSS YA CHATGPT-LIKE HAMWE N'ANIMATION YO KUJYAMBA NO KUMANUKA (FLOATING EFFECT) ---
+# --- CSS YA CHATGPT-LIKE HAMWE N'ANIMATION YO KUJYAMBA NO KUMANUKA N'UBURYO BACKGROUND IHIHINDURA MU MABARA Y'UMUKORORBYA (SOFT RAINBOW) ---
 st_css = """
 <style>
+    /* Uburyo background yihindura buhoro buhoro mu mabara y'umukororbya yoroshye (adapika cyane) */
+    @keyframes softRainbowBg {
+        0% { background-color: #1a1a2e; }
+        25% { background-color: #1f1a24; }
+        50% { background-color: #1a202c; }
+        75% { background-color: #201a22; }
+        100% { background-color: #1a1a2e; }
+    }
+
+    /* Gushyira background animation kuri App yose */
+    .stApp {
+        animation: softRainbowBg 15s ease infinite;
+    }
+
     /* Uburyo bwo kuzamura no kumanika ijambo ry'imitwe (Floating Animation) */
     @keyframes floatUpDown {
         0% {
@@ -28,7 +42,6 @@ st_css = """
         }
     }
 
-    /* Gushyira animation kuri Title cyangwa class yihariye */
     .animated-title {
         animation: floatUpDown 2.5s ease-in-out infinite;
         display: inline-block;
@@ -52,7 +65,7 @@ __streamlit__.markdown(
     '<h1 class="animated-title">🤖 GKevin AI Assistant</h1>', 
     unsafe_allow_html=True
 )
-__streamlit__.write("Welcome! This Assistant is built for helpful users.")
+__streamlit__.write("Welcome! This Assistant was built for using by Users.")
 
 # --- 2. HUZA NA GROQ API ---
 client = OpenAI(
