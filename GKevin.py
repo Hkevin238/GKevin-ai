@@ -79,7 +79,6 @@ if "registered_users" not in __streamlit__.session_state:
 if "last_notification_time" not in __streamlit__.session_state:
     __streamlit__.session_state.last_notification_time = time.time()
 
-# Emeza notification buri segonda 60 (minota 1)
 current_time = time.time()
 if current_time - __streamlit__.session_state.last_notification_time >= 60:
     __streamlit__.toast("🚀 Enjoy Kevin's AI Assistant", icon="🤖")
@@ -288,5 +287,5 @@ if ikibazo := __streamlit__.chat_input("Type here...."):
         __streamlit__.rerun()
         
     except Exception as e:
-        # Zahinduwe kugira ngo zireke gutanga error zitari ngombwa ahubwo zerekane ubutumwa bworoshye cyangwa nta birenzeho
-        __streamlit__.info("GKevin AI is ready. Continue chatting...")
+        # Hano twahagaritse burundu ibyo bitambikamo mu kiganiro (no more ugly error boxes in chat interface)
+        pass
