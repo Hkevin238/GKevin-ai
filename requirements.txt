@@ -5,3 +5,9 @@ openai
 pillow
 pypdf
 supabase
+streamlit
+openai
+pillow
+pypdf
+flask
+requests
