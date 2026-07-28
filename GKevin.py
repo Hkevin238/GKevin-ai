@@ -10,11 +10,11 @@ from flask import Flask, request, jsonify
 import requests
 
 # --- WHATSAPP PRODUCTION CREDENTIALS ---
-WHATSAPP_PHONE_NUMBER_ID = "1230588350137931"
-WHATSAPP_BUSINESS_ACCOUNT_ID = "938023482653168"
-WHATSAPP_PHONE = "+250 793 868 332"
+WHATSAPP_PHONE_NUMBER_ID = "1227756223755507"
+WHATSAPP_BUSINESS_ACCOUNT_ID = "1186592933667697"
+WHATSAPP_PHONE = "+1 (555) 664-6865"
 WEBHOOK_VERIFY_TOKEN = "gkevin_verify_token_123"
-WHATSAPP_ACCESS_TOKEN = "3GtWP41MHsU58iGAD61xtD42gjn_5zujVmnszLcxX2EJ1MgWm"
+WHATSAPP_ACCESS_TOKEN = "NOT_GENERATED_YET"  # Zana access token yawe hano nuyibyara kuri Meta
 
 # --- HUZA NA GROQ API ---
 client = OpenAI(
@@ -156,7 +156,7 @@ __streamlit__.markdown(
     '<h1 class="animated-title">🤖 GKevin AI Assistant (WhatsApp Live)</h1>', 
     unsafe_allow_html=True
 )
-__streamlit__.write(f"Connected to WhatsApp: {WHATSAPP_PHONE} | Built for You. WELCOME !")
+__streamlit__.write(f"Connected to WhatsApp Test Number: {WHATSAPP_PHONE} | Built for You. WELCOME !")
 
 # --- 3. SESSION STATE ---
 if "logged_in_user" not in __streamlit__.session_state:
