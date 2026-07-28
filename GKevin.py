@@ -77,7 +77,7 @@ def whatsapp_webhook():
                                 ],
                                 temperature=0.7,
                                 max_tokens=1024
-                            ]
+                            )
                             ai_reply = completion.choices[0].message.content
                             
                             if "</think>" in ai_reply:
