@@ -110,7 +110,7 @@ if "flask_started" not in __streamlit__.session_state:
 
 # --- 1. PAGE CONFIG ---
 __streamlit__.set_page_config(
-    page_title="GKevin AI Chatbot",
+    page_title="GKevin AI",
     page_icon="🤖",
     layout="centered"
 )
@@ -156,7 +156,7 @@ __streamlit__.markdown(
     '<h1 class="animated-title">🤖 GKevin AI Assistant (WhatsApp Live)</h1>', 
     unsafe_allow_html=True
 )
-__streamlit__.write(f"Connected to WhatsApp: {WHATSAPP_PHONE} | Built for You. WELCOME !")
+__streamlit__.write(f"Recently,GKevin AI will be connected to WhatsApp| Built for You. WELCOME !")
 
 # --- 3. SESSION STATE ---
 if "logged_in_user" not in __streamlit__.session_state:
