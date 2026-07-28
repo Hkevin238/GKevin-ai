@@ -13,7 +13,7 @@ import requests
 WHATSAPP_PHONE_NUMBER_ID = "1230588350137931"
 WHATSAPP_BUSINESS_ACCOUNT_ID = "938023482653168"
 WHATSAPP_PHONE = "+250 793 868 332"
-WEBHOOK_VERIFY_TOKEN = "gkevin_verify_token_123"  # Token uzashyira muri Meta Webhook
+WEBHOOK_VERIFY_TOKEN = "gkevin_verify_token_123"
 WHATSAPP_ACCESS_TOKEN = "EAAS8aw31P04BSNbToL1xmObW0MZBhfHpo0UBBVAN1ctwhUJgDQsgyfCvjJXiuuZCayptHzIdtHlFktrnnCuB3UNyZC6BNoUjBTZAZAdYBT1aDnBCX7nYOsthT9mj9ZAETfVqii6iP4ZCBg2nNeOcTEO8iSXkUjijzSadDZBd1EdZCYvZBaP314PEkxkZBNuE2NtHmPdkcHvzXKyZBm2BILhaMEP7RceTZCZBOFXR2I5LvgExHPvas2WGMyWDi7q2wpKlAKsPegZCrSsWT5VjqQWMjx0N5gw"
 
 # --- HUZA NA GROQ API ---
@@ -69,7 +69,6 @@ def whatsapp_webhook():
                         msg_text = msg.get("text", {}).get("body", "")
                         
                         if msg_text:
-                            # Hamagara Groq API kugira ngo isubize
                             completion = client.chat.completions.create(
                                 model="llama-3.3-70b-versatile",
                                 messages=[
@@ -81,12 +80,10 @@ def whatsapp_webhook():
                             ]
                             ai_reply = completion.choices[0].message.content
                             
-                            # Isuku kuri <think> tags
                             if "</think>" in ai_reply:
                                 ai_reply = ai_reply.split("</think>")[-1].strip()
                             ai_reply = ai_reply.replace("<think>", "").replace("</think>", "").strip()
                             
-                            # Ohereza ubutumwa kuri WhatsApp binyuze muri Meta Graph API
                             url = f"https://graph.facebook.com/v21.0/{WHATSAPP_PHONE_NUMBER_ID}/messages"
                             headers = {
                                 "Authorization": f"Bearer {WHATSAPP_ACCESS_TOKEN}",
@@ -106,7 +103,6 @@ def whatsapp_webhook():
 def run_flask():
     flask_app.run(port=5000, debug=False, use_reloader=False)
 
-# Tangiza Flask server mu mwanya wihariye (Background Thread)
 if "flask_started" not in __streamlit__.session_state:
     __streamlit__.session_state.flask_started = True
     threading.Thread(target=run_flask, daemon=True).start()
@@ -119,7 +115,6 @@ __streamlit__.set_page_config(
     layout="centered"
 )
 
-# --- CSS YA CHATGPT-LIKE HAMWE N'ANIMATION (FLOATING & SOFT RAINBOW BG) ---
 st_css = """
 <style>
     @keyframes softRainbowBg {
@@ -163,7 +158,7 @@ __streamlit__.markdown(
 )
 __streamlit__.write(f"Connected to WhatsApp: {WHATSAPP_PHONE} | Built for You. WELCOME !")
 
-# --- 3. SESSION STATE Y'ABAKORESHA BINJIYE N'UBURYO BWO KWANDIKISHA (LOCAL MEMORY) ---
+# --- 3. SESSION STATE ---
 if "logged_in_user" not in __streamlit__.session_state:
     __streamlit__.session_state.logged_in_user = None
 
@@ -172,10 +167,9 @@ if "user_histories" not in __streamlit__.session_state:
 
 if "registered_users" not in __streamlit__.session_state:
     __streamlit__.session_state.registered_users = {
-        "therealhacks583@gmail.com": "admin123"  # Admin account yawe y'ibanze
+        "therealhacks583@gmail.com": "admin123"
     }
 
-# --- 3.1. TIME TRACKER YA NOTIFICATION YA BURI MINOTA 1 ---
 if "last_notification_time" not in __streamlit__.session_state:
     __streamlit__.session_state.last_notification_time = time.time()
 
@@ -184,8 +178,7 @@ if current_time - __streamlit__.session_state.last_notification_time >= 60:
     __streamlit__.toast("🚀 Enjoy Kevin's AI Assistant", icon="🤖")
     __streamlit__.session_state.last_notification_time = current_time
 
-
-# --- 4. AUTHENTICATION (LOGIN & SIGN UP SIDEBAR - LOCAL) ---
+# --- 4. AUTHENTICATION ---
 with __streamlit__.sidebar:
     __streamlit__.header("🔐 GKevin AI Assistant Account Authentication")
     
@@ -206,7 +199,7 @@ with __streamlit__.sidebar:
                         __streamlit__.session_state.registered_users[email_input] = password_input
                         __streamlit__.success("Account Created Successfully! You can now (Login).")
         
-        else:  # Login Mode
+        else:
             if __streamlit__.button("Login"):
                 if not email_input or not password_input:
                     __streamlit__.error("Enter email and password!")
@@ -224,7 +217,6 @@ with __streamlit__.sidebar:
     else:
         __streamlit__.success(f"Logged in as: {__streamlit__.session_state.logged_in_user}")
         
-        # --- ADMIN PANEL ---
         if __streamlit__.session_state.logged_in_user == "therealhacks583@gmail.com":
             __streamlit__.markdown("---")
             __streamlit__.subheader("🛠️ Admin Panel")
@@ -246,8 +238,7 @@ with __streamlit__.sidebar:
             __streamlit__.session_state.logged_in_user = None
             __streamlit__.rerun()
 
-
-# --- 5. KWEREKANA HISTORIQUE Y'UMUKORESHI WEMEJWE ---
+# --- 5. CHAT HISTORY DISPLAY ---
 active_user = __streamlit__.session_state.logged_in_user
 if active_user not in __streamlit__.session_state.user_histories:
     __streamlit__.session_state.user_histories[active_user] = [
@@ -269,7 +260,7 @@ for message in user_messages_list:
             else:
                 __streamlit__.markdown(content)
 
-# --- 6. FILE UPLOADER HAFI Y'INPUT BOX ---
+# --- 6. FILE UPLOADER ---
 col_file, col_empty = __streamlit__.columns([3, 7])
 with col_file:
     uploaded_file = __streamlit__.file_uploader(
@@ -288,7 +279,7 @@ if uploaded_file is not None:
     else:
         __streamlit__.caption(f"📎 File attached: {uploaded_file.name}")
 
-# --- 7. CHAT INPUT N'UBURYO IKORANA NA GROQ ---
+# --- 7. CHAT INPUT & GROQ HANDLER ---
 if ikibazo := __streamlit__.chat_input("Type here...."):
     
     chat_payload = []
@@ -352,7 +343,6 @@ if ikibazo := __streamlit__.chat_input("Type here...."):
             
             igisubizo_cya_ai = completion.choices[0].message.content
             
-            # --- GUSISURA NO GUSHIYHO MU BIKORESHWA ---
             if "</think>" in igisubizo_cya_ai:
                 parts = igisubizo_cya_ai.split("</think>")
                 igisubizo_cya_ai = parts[-1].strip()
