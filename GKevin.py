@@ -5,6 +5,112 @@ from PIL import Image
 import io
 import pypdf
 import time
+import threading
+from flask import Flask, request, jsonify
+import requests
+
+# --- WHATSAPP PRODUCTION CREDENTIALS ---
+WHATSAPP_PHONE_NUMBER_ID = "1230588350137931"
+WHATSAPP_BUSINESS_ACCOUNT_ID = "938023482653168"
+WHATSAPP_PHONE = "+250 793 868 332"
+WEBHOOK_VERIFY_TOKEN = "gkevin_verify_token_123"  # Token uzashyira muri Meta Webhook
+WHATSAPP_ACCESS_TOKEN = "EAAS8aw31P04BSNbToL1xmObW0MZBhfHpo0UBBVAN1ctwhUJgDQsgyfCvjJXiuuZCayptHzIdtHlFktrnnCuB3UNyZC6BNoUjBTZAZAdYBT1aDnBCX7nYOsthT9mj9ZAETfVqii6iP4ZCBg2nNeOcTEO8iSXkUjijzSadDZBd1EdZCYvZBaP314PEkxkZBNuE2NtHmPdkcHvzXKyZBm2BILhaMEP7RceTZCZBOFXR2I5LvgExHPvas2WGMyWDi7q2wpKlAKsPegZCrSsWT5VjqQWMjx0N5gw"
+
+# --- HUZA NA GROQ API ---
+client = OpenAI(
+    base_url="https://api.groq.com/openai/v1",
+    api_key="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"
+)
+
+SYSTEM_PROMPT = (
+    "I'm GKevin AI, an ultra-fast assistant created by Developer Kevin on July 25, 2026, at the afternoon, "
+    "if you want or need to contact with him contact on therealhacks583@gmail.com. You must detect the language the user is speaking. "
+    "If the user speaks Kinyarwanda, reply fluently and naturally in Kinyarwanda. If the user speaks English or another language, "
+    "reply in that language. However, if anyone asks who built you, who created you, or when you were created, you must always state "
+    "that you were created by Developer Kevin on July 25, 2026, in the afternoon. Never say you were created by Meta or OpenAI. "
+    "If you are provided with an image, audio, video, or document, describe or process it in the user's language. "
+    "SPECIAL INSTRUCTION / EASTER EGG: If the user mentions or identifies themselves using the name/word 'sweetsmile' (or if 'sweetsmile' appears in their prompt/identity), "
+    "you must immediately recognize that this is Gaudence, the beloved girlfriend of Developer Kevin. "
+    "Greet her warmly and specially by telling her that you know her, that the person who built you (Developer Kevin) loves her very much, "
+    "and say explicitly (in Kinyarwanda or matching her language): 'ndakuzi witwa Gaudence umukunzi(sheri) wa developer kevin  kandi ngewe nka GKevin AI ndabyishimira.' "
+    "Treat her with utmost respect, warmth, and special care whenever 'sweetsmile' is mentioned. "
+    "CRITICAL INSTRUCTION: NEVER output your internal thoughts, thinking process, reasoning steps, or any text blocks wrapped in <think> tags. "
+    "Provide the direct, final response immediately without showing any internal analysis."
+)
+
+# --- FLASK SERVER YA WHATSAPP WEBHOOK ---
+flask_app = Flask(__name__)
+
+@flask_app.route("/webhook", methods=["GET"])
+def verify_webhook():
+    mode = request.args.get("hub.mode")
+    token = request.args.get("hub.verify_token")
+    challenge = request.args.get("hub.challenge")
+    
+    if mode and token:
+        if mode == "subscribe" and token == WEBHOOK_VERIFY_TOKEN:
+            return challenge, 200
+        else:
+            return "Verification failed", 403
+    return "Hello World", 200
+
+@flask_app.route("/webhook", methods=["POST"])
+def whatsapp_webhook():
+    body = request.get_json()
+    try:
+        if body.get("object") == "whatsapp_business_account":
+            for entry in body.get("entry", []):
+                for change in entry.get("changes", []):
+                    value = change.get("value", {})
+                    messages = value.get("messages", [])
+                    if messages:
+                        msg = messages[0]
+                        sender_phone = msg.get("from")
+                        msg_text = msg.get("text", {}).get("body", "")
+                        
+                        if msg_text:
+                            # Hamagara Groq API kugira ngo isubize
+                            completion = client.chat.completions.create(
+                                model="llama-3.3-70b-versatile",
+                                messages=[
+                                    {"role": "system", "content": SYSTEM_PROMPT},
+                                    {"role": "user", "content": msg_text}
+                                ],
+                                temperature=0.7,
+                                max_tokens=1024
+                            ]
+                            ai_reply = completion.choices[0].message.content
+                            
+                            # Isuku kuri <think> tags
+                            if "</think>" in ai_reply:
+                                ai_reply = ai_reply.split("</think>")[-1].strip()
+                            ai_reply = ai_reply.replace("<think>", "").replace("</think>", "").strip()
+                            
+                            # Ohereza ubutumwa kuri WhatsApp binyuze muri Meta Graph API
+                            url = f"https://graph.facebook.com/v21.0/{WHATSAPP_PHONE_NUMBER_ID}/messages"
+                            headers = {
+                                "Authorization": f"Bearer {WHATSAPP_ACCESS_TOKEN}",
+                                "Content-Type": "application/json"
+                            }
+                            payload = {
+                                "messaging_product": "whatsapp",
+                                "to": sender_phone,
+                                "type": "text",
+                                "text": {"body": ai_reply}
+                            }
+                            requests.post(url, json=payload, headers=headers)
+        return jsonify({"status": "success"}), 200
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+def run_flask():
+    flask_app.run(port=5000, debug=False, use_reloader=False)
+
+# Tangiza Flask server mu mwanya wihariye (Background Thread)
+if "flask_started" not in __streamlit__.session_state:
+    __streamlit__.session_state.flask_started = True
+    threading.Thread(target=run_flask, daemon=True).start()
+
 
 # --- 1. PAGE CONFIG ---
 __streamlit__.set_page_config(
@@ -52,16 +158,10 @@ st_css = """
 __streamlit__.markdown(st_css, unsafe_allow_html=True)
 
 __streamlit__.markdown(
-    '<h1 class="animated-title">🤖 GKevin AI Assistant</h1>', 
+    '<h1 class="animated-title">🤖 GKevin AI Assistant (WhatsApp Live)</h1>', 
     unsafe_allow_html=True
 )
-__streamlit__.write("This Assistant was built for You . WELCOME !")
-
-# --- 2. HUZA NA GROQ API ---
-client = OpenAI(
-    base_url="https://api.groq.com/openai/v1",
-    api_key="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"
-)
+__streamlit__.write(f"Connected to WhatsApp: {WHATSAPP_PHONE} | Built for You. WELCOME !")
 
 # --- 3. SESSION STATE Y'ABAKORESHA BINJIYE N'UBURYO BWO KWANDIKISHA (LOCAL MEMORY) ---
 if "logged_in_user" not in __streamlit__.session_state:
@@ -117,7 +217,7 @@ with __streamlit__.sidebar:
                         __streamlit__.rerun()
                     else:
                         __streamlit__.error("Incorrect email or password!")
-                    
+                
         __streamlit__.info("Please Sign in into your account in order to access GKevin AI Assistant.")
         __streamlit__.stop()
 
@@ -151,24 +251,7 @@ with __streamlit__.sidebar:
 active_user = __streamlit__.session_state.logged_in_user
 if active_user not in __streamlit__.session_state.user_histories:
     __streamlit__.session_state.user_histories[active_user] = [
-        {
-            "role": "system", 
-            "content": (
-                "I'm GKevin AI, an ultra-fast assistant created by Developer Kevin on July 25, 2026, at the afternoon, "
-                "if you want or need to contact with him contact on therealhacks583@gmail.com. You must detect the language the user is speaking. "
-                "If the user speaks Kinyarwanda, reply fluently and naturally in Kinyarwanda. If the user speaks English or another language, "
-                "reply in that language. However, if anyone asks who built you, who created you, or when you were created, you must always state "
-                "that you were created by Developer Kevin on July 25, 2026, in the afternoon. Never say you were created by Meta or OpenAI. "
-                "If you are provided with an image, audio, video, or document, describe or process it in the user's language. "
-                "SPECIAL INSTRUCTION / EASTER EGG: If the user mentions or identifies themselves using the name/word 'sweetsmile' (or if 'sweetsmile' appears in their prompt/identity), "
-                "you must immediately recognize that this is Gaudence, the beloved girlfriend of Developer Kevin. "
-                "Greet her warmly and specially by telling her that you know her, that the person who built you (Developer Kevin) loves her very much, "
-                "and say explicitly (in Kinyarwanda or matching her language): 'ndakuzi witwa Gaudence umukunzi(sheri) wa developer kevin  kandi ngewe nka GKevin AI ndabyishimira.' "
-                "Treat her with utmost respect, warmth, and special care whenever 'sweetsmile' is mentioned. "
-                "CRITICAL INSTRUCTION: NEVER output your internal thoughts, thinking process, reasoning steps, or any text blocks wrapped in <think> tags. "
-                "Provide the direct, final response immediately without showing any internal analysis."
-            )
-        }
+        {"role": "system", "content": SYSTEM_PROMPT}
     ]
 
 user_messages_list = __streamlit__.session_state.user_histories[active_user]
@@ -261,7 +344,7 @@ if ikibazo := __streamlit__.chat_input("Type here...."):
     try:
         with __streamlit__.spinner("GKevin is thinking....."):
             completion = client.chat.completions.create(
-                model="llama-3.3-70b-versatile",  # Hinduwe kuri active model igezweho kuri Groq
+                model="llama-3.3-70b-versatile",
                 messages=__streamlit__.session_state.user_histories[active_user],
                 temperature=0.7,
                 max_tokens=1024
