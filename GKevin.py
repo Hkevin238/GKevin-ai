@@ -161,19 +161,23 @@ __streamlit__.markdown(
     '<h1 class="animated-title">🤖 GKevin AI Assistant (WhatsApp Live)</h1>', 
     unsafe_allow_html=True
 )
-__streamlit__.write(f"Recently,GKevin AI will be connected to WhatsApp| Built for You. WELCOME !")
+__streamlit__.write(f"Recently, GKevin AI will be connected to WhatsApp | Built for You. WELCOME !")
 
-# --- 3. SESSION STATE ---
+# --- 3. SESSION STATE FOR MULTI-CHAT HISTORY (GEMINI STYLE) ---
 if "logged_in_user" not in __streamlit__.session_state:
     __streamlit__.session_state.logged_in_user = None
-
-if "user_histories" not in __streamlit__.session_state:
-    __streamlit__.session_state.user_histories = {}
 
 if "registered_users" not in __streamlit__.session_state:
     __streamlit__.session_state.registered_users = {
         "therealhacks583@gmail.com": "admin123"
     }
+
+# Dictionary yo kubika amateka y'ibiganiro byose by'abakoresha (User Chats Sessions)
+if "chats" not in __streamlit__.session_state:
+    __streamlit__.session_state.chats = {} # {user_email: {chat_id: {"title": str, "messages": [...]}}}
+
+if "current_chat_id" not in __streamlit__.session_state:
+    __streamlit__.session_state.current_chat_id = None
 
 if "last_notification_time" not in __streamlit__.session_state:
     __streamlit__.session_state.last_notification_time = time.time()
@@ -183,9 +187,10 @@ if current_time - __streamlit__.session_state.last_notification_time >= 60:
     __streamlit__.toast("🚀 Enjoy Kevin's AI Assistant", icon="🤖")
     __streamlit__.session_state.last_notification_time = current_time
 
-# --- 4. AUTHENTICATION ---
+
+# --- 4. AUTHENTICATION & SIDEBAR CHAT HISTORY ---
 with __streamlit__.sidebar:
-    __streamlit__.header("🔐 GKevin AI Assistant Account Authentication")
+    __streamlit__.header("🔐 Account Authentication")
     
     if __streamlit__.session_state.logged_in_user is None:
         auth_mode = __streamlit__.radio("Choose how to access:", ["Login", "Sign Up"])
@@ -211,6 +216,22 @@ with __streamlit__.sidebar:
                 else:
                     if email_input in __streamlit__.session_state.registered_users and __streamlit__.session_state.registered_users[email_input] == password_input:
                         __streamlit__.session_state.logged_in_user = email_input
+                        
+                        # Shaka cyangwa urebe niba afite chat ya mbere
+                        user_email = email_input
+                        if user_email not in __streamlit__.session_state.chats:
+                            __streamlit__.session_state.chats[user_email] = {}
+                        
+                        if not __streamlit__.session_state.chats[user_email]:
+                            init_id = f"chat_{int(time.time())}"
+                            __streamlit__.session_state.chats[user_email][init_id] = {
+                                "title": "New Chat",
+                                "messages": [{"role": "system", "content": SYSTEM_PROMPT}]
+                            }
+                            __streamlit__.session_state.current_chat_id = init_id
+                        else:
+                            __streamlit__.session_state.current_chat_id = list(__streamlit__.session_state.chats[user_email].keys())[0]
+
                         __streamlit__.success(f"You're Welcome !, {email_input}!")
                         __streamlit__.rerun()
                     else:
@@ -220,149 +241,206 @@ with __streamlit__.sidebar:
         __streamlit__.stop()
 
     else:
-        __streamlit__.success(f"Logged in as: {__streamlit__.session_state.logged_in_user}")
+        current_user = __streamlit__.session_state.logged_in_user
+        __streamlit__.success(f"Logged in: {current_user}")
         
-        if __streamlit__.session_state.logged_in_user == "therealhacks583@gmail.com":
-            __streamlit__.markdown("---")
+        # Ongeraho uburyo bwo gukora New Chat nka Gemini
+        if __streamlit__.button("➕ New Chat", use_container_width=True):
+            new_id = f"chat_{int(time.time())}"
+            if current_user not in __streamlit__.session_state.chats:
+                __streamlit__.session_state.chats[current_user] = {}
+            
+            __streamlit__.session_state.chats[current_user][new_id] = {
+                "title": "New Chat",
+                "messages": [{"role": "system", "content": SYSTEM_PROMPT}]
+            }
+            __streamlit__.session_state.current_chat_id = new_id
+            __streamlit__.rerun()
+
+        __streamlit__.markdown("---")
+        __streamlit__.markdown("### 💬 Recents (Chat History)")
+
+        # Niba uyu mukoresha afite chats, zerekanemo zose nk'urutonde muri Sidebar
+        if current_user in __streamlit__.session_state.chats:
+            user_chats = __streamlit__.session_state.chats[current_user]
+            for c_id, c_data in list(user_chats.items()):
+                title_label = c_data["title"]
+                if len(title_label) > 25:
+                    title_label = title_label[:22] + "..."
+                
+                # Iyo ukanze kuri buto y'ikiganiro cyashize irayifungura
+                is_selected = (c_id == __streamlit__.session_state.current_chat_id)
+                button_type = "primary" if is_selected else "secondary"
+                
+                col_c1, col_c2 = __streamlit__.columns([4, 1])
+                with col_c1:
+                    if __streamlit__.button(title_label, key=f"select_{c_id}", use_container_width=True, type=button_type):
+                        __streamlit__.session_state.current_chat_id = c_id
+                        __streamlit__.rerun()
+                with col_c2:
+                    if __streamlit__.button("🗑️", key=f"del_{c_id}"):
+                        del user_chats[c_id]
+                        if user_chats:
+                            __streamlit__.session_state.current_chat_id = list(user_chats.keys())[0]
+                        else:
+                            new_id = f"chat_{int(time.time())}"
+                            user_chats[new_id] = {
+                                "title": "New Chat",
+                                "messages": [{"role": "system", "content": SYSTEM_PROMPT}]
+                            }
+                            __streamlit__.session_state.current_chat_id = new_id
+                        __streamlit__.rerun()
+
+        __streamlit__.markdown("---")
+        if current_user == "therealhacks583@gmail.com":
             __streamlit__.subheader("🛠️ Admin Panel")
             if __streamlit__.button("Reba Abakoresha Bose (Local Users)"):
                 __streamlit__.json(__streamlit__.session_state.registered_users)
             __streamlit__.markdown("---")
-
-        __streamlit__.header("💬 Chat History")
-        current_user = __streamlit__.session_state.logged_in_user
-        msg_count = len(__streamlit__.session_state.user_histories.get(current_user, [])) - 1
-        __streamlit__.write(f"Messages kept: {max(0, msg_count)}")
-        
-        if __streamlit__.button("Clear Conversation"):
-            system_msg = __streamlit__.session_state.user_histories[current_user][0]
-            __streamlit__.session_state.user_histories[current_user] = [system_msg]
-            __streamlit__.rerun()
             
         if __streamlit__.button("Log Out"):
             __streamlit__.session_state.logged_in_user = None
+            __streamlit__.session_state.current_chat_id = None
             __streamlit__.rerun()
 
-# --- 5. CHAT HISTORY DISPLAY ---
+
+# --- 5. KWEMEZA NEZA CHAT ID IRI GUSOMWA ---
 active_user = __streamlit__.session_state.logged_in_user
-if active_user not in __streamlit__.session_state.user_histories:
-    __streamlit__.session_state.user_histories[active_user] = [
-        {"role": "system", "content": SYSTEM_PROMPT}
-    ]
-
-user_messages_list = __streamlit__.session_state.user_histories[active_user]
-
-for message in user_messages_list:
-    if message["role"] != "system":
-        with __streamlit__.chat_message(message["role"]):
-            content = message['content']
-            if isinstance(content, list):
-                for item in content:
-                    if item.get('type') == 'text':
-                        __streamlit__.markdown(item['text'])
-                    elif item.get('type') == 'image_url':
-                        __streamlit__.image(item['image_url']['url'])
-            else:
-                __streamlit__.markdown(content)
-
-# --- 6. FILE UPLOADER ---
-col_file, col_empty = __streamlit__.columns([3, 7])
-with col_file:
-    uploaded_file = __streamlit__.file_uploader(
-        "➕ Attach File", 
-        type=["png", "jpg", "jpeg", "pdf", "txt", "csv", "docx", "mp3", "wav", "mp4", "mov"],
-        label_visibility="collapsed"
-    )
-
-if uploaded_file is not None:
-    if uploaded_file.type.startswith("image/"):
-        __streamlit__.caption(f"🖼️ Image attached: {uploaded_file.name}")
-    elif uploaded_file.type.startswith("audio/"):
-        __streamlit__.caption(f"🎵 Audio attached: {uploaded_file.name}")
-    elif uploaded_file.type.startswith("video/"):
-        __streamlit__.caption(f"🎬 Video attached: {uploaded_file.name}")
-    else:
-        __streamlit__.caption(f"📎 File attached: {uploaded_file.name}")
-
-# --- 7. CHAT INPUT & GROQ HANDLER ---
-if ikibazo := __streamlit__.chat_input("Type here...."):
+if active_user:
+    if active_user not in __streamlit__.session_state.chats:
+        __streamlit__.session_state.chats[active_user] = {}
     
-    chat_payload = []
-    file_text_content = ""
-    
+    if not __streamlit__.session_state.current_chat_id or __streamlit__.session_state.current_chat_id not in __streamlit__.session_state.chats[active_user]:
+        if __streamlit__.session_state.chats[active_user]:
+            __streamlit__.session_state.current_chat_id = list(__streamlit__.session_state.chats[active_user].keys())[0]
+        else:
+            init_id = f"chat_{int(time.time())}"
+            __streamlit__.session_state.chats[active_user][init_id] = {
+                "title": "New Chat",
+                "messages": [{"role": "system", "content": SYSTEM_PROMPT}]
+            }
+            __streamlit__.session_state.current_chat_id = init_id
+
+    current_chat_id = __streamlit__.session_state.current_chat_id
+    user_messages_list = __streamlit__.session_state.chats[active_user][current_chat_id]["messages"]
+
+    # --- 6. KWEREKANA UBUSOBANURO BW'IBIGANIRO (CHAT MESSAGES DISPLAY) ---
+    for message in user_messages_list:
+        if message["role"] != "system":
+            with __streamlit__.chat_message(message["role"]):
+                content = message['content']
+                if isinstance(content, list):
+                    for item in content:
+                        if item.get('type') == 'text':
+                            __streamlit__.markdown(item['text'])
+                        elif item.get('type') == 'image_url':
+                            __streamlit__.image(item['image_url']['url'])
+                else:
+                    __streamlit__.markdown(content)
+
+    # --- 7. FILE UPLOADER ---
+    col_file, col_empty = __streamlit__.columns([3, 7])
+    with col_file:
+        uploaded_file = __streamlit__.file_uploader(
+            "➕ Attach File", 
+            type=["png", "jpg", "jpeg", "pdf", "txt", "csv", "docx", "mp3", "wav", "mp4", "mov"],
+            label_visibility="collapsed"
+        )
+
     if uploaded_file is not None:
-        if uploaded_file.type == "application/pdf":
-            try:
-                reader = pypdf.PdfReader(uploaded_file)
-                for page in reader.pages:
-                    file_text_content += page.extract_text() + "\n"
-            except Exception as e:
-                file_text_content = f"[Error reading PDF: {e}]"
-        elif uploaded_file.type == "text/plain":
-            file_text_content = uploaded_file.getvalue().decode("utf-8")
+        if uploaded_file.type.startswith("image/"):
+            __streamlit__.caption(f"🖼️ Image attached: {uploaded_file.name}")
         elif uploaded_file.type.startswith("audio/"):
-            file_text_content = f"[Attached Audio File: {uploaded_file.name}]"
+            __streamlit__.caption(f"🎵 Audio attached: {uploaded_file.name}")
         elif uploaded_file.type.startswith("video/"):
-            file_text_content = f"[Attached Video File: {uploaded_file.name}]"
-        elif uploaded_file.type in ["application/vnd.openxmlformats-officedocument.wordprocessingml.document", "text/csv"]:
-            file_text_content = f"[Attached Document: {uploaded_file.name}]"
+            __streamlit__.caption(f"🎬 Video attached: {uploaded_file.name}")
+        else:
+            __streamlit__.caption(f"📎 File attached: {uploaded_file.name}")
 
-    full_query = ikibazo
-    if file_text_content and not uploaded_file.type.startswith("image/"):
-        full_query = f"{ikibazo}\n\nHere is information about the attached file ({uploaded_file.name}):\n{file_text_content}"
-
-    if full_query:
-        __streamlit__.chat_message("user").markdown(ikibazo)
+    # --- 8. CHAT INPUT & GROQ HANDLER ---
+    if ikibazo := __streamlit__.chat_input("Type here...."):
+        
+        chat_payload = []
+        file_text_content = ""
+        
         if uploaded_file is not None:
-            if uploaded_file.type.startswith("audio/"):
-                __streamlit__.audio(uploaded_file)
+            if uploaded_file.type == "application/pdf":
+                try:
+                    reader = pypdf.PdfReader(uploaded_file)
+                    for page in reader.pages:
+                        file_text_content += page.extract_text() + "\n"
+                except Exception as e:
+                    file_text_content = f"[Error reading PDF: {e}]"
+            elif uploaded_file.type == "text/plain":
+                file_text_content = uploaded_file.getvalue().decode("utf-8")
+            elif uploaded_file.type.startswith("audio/"):
+                file_text_content = f"[Attached Audio File: {uploaded_file.name}]"
             elif uploaded_file.type.startswith("video/"):
-                __streamlit__.video(uploaded_file)
+                file_text_content = f"[Attached Video File: {uploaded_file.name}]"
+            elif uploaded_file.type in ["application/vnd.openxmlformats-officedocument.wordprocessingml.document", "text/csv"]:
+                file_text_content = f"[Attached Document: {uploaded_file.name}]"
+
+        full_query = ikibazo
+        if file_text_content and not uploaded_file.type.startswith("image/"):
+            full_query = f"{ikibazo}\n\nHere is information about the attached file ({uploaded_file.name}):\n{file_text_content}"
+
+        if full_query:
+            __streamlit__.chat_message("user").markdown(ikibazo)
+            if uploaded_file is not None:
+                if uploaded_file.type.startswith("audio/"):
+                    __streamlit__.audio(uploaded_file)
+                elif uploaded_file.type.startswith("video/"):
+                    __streamlit__.video(uploaded_file)
+                    
+            chat_payload.append({"type": "text", "text": full_query})
+
+        if uploaded_file is not None and uploaded_file.type.startswith("image/"):
+            with __streamlit__.chat_message("user"):
+                __streamlit__.image(uploaded_file)
                 
-        chat_payload.append({"type": "text", "text": full_query})
+            bytes_data = uploaded_file.getvalue()
+            base64_image = base64.b64encode(bytes_data).decode('utf-8')
+            mime_type = uploaded_file.type
+            
+            chat_payload.append({
+                "type": "image_url",
+                "image_url": {"url": f"data:{mime_type};base64,{base64_image}"}
+            })
 
-    if uploaded_file is not None and uploaded_file.type.startswith("image/"):
-        with __streamlit__.chat_message("user"):
-            __streamlit__.image(uploaded_file)
-            
-        bytes_data = uploaded_file.getvalue()
-        base64_image = base64.b64encode(bytes_data).decode('utf-8')
-        mime_type = uploaded_file.type
+        full_user_message = {"role": "user", "content": chat_payload}
         
-        chat_payload.append({
-            "type": "image_url",
-            "image_url": {"url": f"data:{mime_type};base64,{base64_image}"}
-        })
+        # Hindura Title ya chat niba yari "New Trust/New Chat" ikaba ubutumwa bwa mbere bwa user
+        if __streamlit__.session_state.chats[active_user][current_chat_id]["title"] == "New Chat":
+            __streamlit__.session_state.chats[active_user][current_chat_id]["title"] = ikibazo
 
-    full_user_message = {"role": "user", "content": chat_payload}
-    __streamlit__.session_state.user_histories[active_user].append(full_user_message)
-    
-    try:
-        with __streamlit__.spinner("GKevin is thinking....."):
-            completion = client.chat.completions.create(
-                model="llama-3.3-70b-versatile",
-                messages=__streamlit__.session_state.user_histories[active_user],
-                temperature=0.7,
-                max_tokens=1024
-            )
-            
-            igisubizo_cya_ai = completion.choices[0].message.content
-            
-            if "</think>" in igisubizo_cya_ai:
-                parts = igisubizo_cya_ai.split("</think>")
-                igisubizo_cya_ai = parts[-1].strip()
-            elif "<think>" in igisubizo_cya_ai:
-                parts = igisubizo_cya_ai.split("<think>")
-                igisubizo_cya_ai = parts[0].strip()
-                if not igisubizo_cya_ai and len(parts) > 1:
-                    sub_parts = parts[1].split(">")
-                    if len(sub_parts) > 1:
-                        igisubizo_cya_ai = sub_parts[-1].strip()
-            
-            igisubizo_cya_ai = igisubizo_cya_ai.replace("<think>", "").replace("</think>", "").strip()
-            
-        __streamlit__.session_state.user_histories[active_user].append({"role": "assistant", "content": igisubizo_cya_ai})
-        __streamlit__.rerun()
+        __streamlit__.session_state.chats[active_user][current_chat_id]["messages"].append(full_user_message)
         
-    except Exception as e:
-        __streamlit__.error(f"Haba habaye ikibazo: {e}")
+        try:
+            with __streamlit__.spinner("GKevin is thinking....."):
+                completion = client.chat.completions.create(
+                    model="llama-3.3-70b-versatile",
+                    messages=__streamlit__.session_state.chats[active_user][current_chat_id]["messages"],
+                    temperature=0.7,
+                    max_tokens=1024
+                )
+                
+                igisubizo_cya_ai = completion.choices[0].message.content
+                
+                if "</think>" in igisubizo_cya_ai:
+                    parts = igisubizo_cya_ai.split("</think>")
+                    igisubizo_cya_ai = parts[-1].strip()
+                elif "<think>" in igisubizo_cya_ai:
+                    parts = igisubizo_cya_ai.split("<think>")
+                    igisubizo_cya_ai = parts[0].strip()
+                    if not igisubizo_cya_ai and len(parts) > 1:
+                        sub_parts = parts[1].split(">")
+                        if len(sub_parts) > 1:
+                            igisubizo_cya_ai = sub_parts[-1].strip()
+                
+                igisubizo_cya_ai = igisubizo_cya_ai.replace("<think>", "").replace("</think>", "").strip()
+                
+            __streamlit__.session_state.chats[active_user][current_chat_id]["messages"].append({"role": "assistant", "content": igisubizo_cya_ai})
+            __streamlit__.rerun()
+            
+        except Exception as e:
+            __streamlit__.error(f"Haba habaye ikibazo: {e}")
