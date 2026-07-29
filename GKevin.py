@@ -16,10 +16,15 @@ WHATSAPP_PHONE = "+1 (555) 664-6865"
 WEBHOOK_VERIFY_TOKEN = "gkevin_verify_token_123"
 WHATSAPP_ACCESS_TOKEN = "3GtWP41MHsU58iGAD61xtD42gjn_5zujVmnszLcxX2EJ1MgWm"
 
-# --- HUZA NA GROQ API ---
+# --- HUZA NA GROQ API UKORESHEJE STREAMLIT SECRETS ---
+try:
+    groq_api_key_val = __streamlit__.secrets["GROQ_API_KEY"]
+except Exception:
+    groq_api_key_val = "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"
+
 client = OpenAI(
     base_url="https://api.groq.com/openai/v1",
-    api_key="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"
+    api_key=groq_api_key_val
 )
 
 SYSTEM_PROMPT = (
