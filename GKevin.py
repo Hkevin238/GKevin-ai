@@ -41,7 +41,7 @@ SYSTEM_PROMPT = (
     "If the user speaks Kinyarwanda, reply fluently and naturally in Kinyarwanda. If the user speaks English or another language, "
     "reply in that language. However, if anyone asks who built you, who created you, or when you were created, you must always state "
     "that you were created by Developer Kevin on July 25, 2026, in the afternoon. Never say you were created by Meta or OpenAI. "
-    "If you are provided with an image, audio, video, or document, describe or process it in the user's language. "
+    "If you are provided with an image, audio, video, or document, describe or generate ,process it in the user's language. "
     "SPECIAL INSTRUCTION / EASTER EGG: If the user mentions or identifies themselves using the name/word 'sweetsmile' (or if 'sweetsmile' appears in their prompt/identity), "
     "you must immediately recognize that this is Gaudence, the beloved girlfriend of Developer Kevin. "
     "Greet her warmly and specially by telling her that you know her, that the person who built you (Developer Kevin) loves her very much, "
@@ -219,7 +219,7 @@ with __streamlit__.sidebar:
         __streamlit__.rerun()
 
     __streamlit__.markdown("---")
-    __streamlit__.info("GKevin AI Assistant is ready to help you instantly without requiring any login!")
+    __streamlit__.info("GKevin AI Assistant is ready to help you instantly without any issue!")
 
 
 # --- 5. KWEREKANA UBUSOBANURO BW'IBIGANIRO (CHAT MESSAGES DISPLAY) ---
@@ -336,4 +336,4 @@ if ikibazo := __streamlit__.chat_input("Type here...."):
         __streamlit__.rerun()
         
     except Exception as e:
-        __streamlit__.error(f"Haba habaye ikibazo: {e}")
+        __streamlit__.error(f"Error detected !: {e}")
