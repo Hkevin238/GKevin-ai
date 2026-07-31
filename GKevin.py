@@ -10,12 +10,20 @@ from flask import Flask, request, jsonify
 import requests
 import os
 
-# --- 0. LOGO FINDER (Ishaka fayili ya logo iri mu bubiko) ---
+# --- 0. LOGO FINDER & BASE64 ENCODING ---
 logo_file = None
 for f in ["ai.jpg", "kvn.png", "ai.png"]:
     if os.path.exists(f):
         logo_file = f
         break
+
+encoded_bg = ""
+mime_type = "image/jpeg"
+
+if logo_file:
+    with open(logo_file, "rb") as f:
+        encoded_bg = base64.b64encode(f.read()).decode("utf-8")
+    mime_type = "image/jpeg" if logo_file.endswith((".jpg", ".jpeg")) else "image/png"
 
 # --- 1. PAGE CONFIG & LOGO SETUP ---
 __streamlit__.set_page_config(
@@ -128,69 +136,74 @@ if "flask_started" not in __streamlit__.session_state:
     threading.Thread(target=run_flask, daemon=True).start()
 
 
-# --- STYLING & CUSTOM CSS ---
-st_css = """
+# --- STYLING & CUSTOM CSS WITH LOGO BACKGROUND ---
+bg_style = f"""
+    background-image: linear-gradient(rgba(18, 18, 30, 0.85), rgba(18, 18, 30, 0.85)), url("data:{mime_type};base64,{encoded_bg}");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+""" if encoded_bg else """
+    animation: softRainbowBg 15s ease infinite;
+"""
+
+st_css = f"""
 <style>
-    @keyframes softRainbowBg {
-        0% { background-color: #1a1a2e; }
-        25% { background-color: #1f1a24; }
-        50% { background-color: #1a202c; }
-        75% { background-color: #201a22; }
-        100% { background-color: #1a1a2e; }
-    }
+    @keyframes softRainbowBg {{
+        0% {{ background-color: #1a1a2e; }}
+        25% {{ background-color: #1f1a24; }}
+        50% {{ background-color: #1a202c; }}
+        75% {{ background-color: #201a22; }}
+        100% {{ background-color: #1a1a2e; }}
+    }}
 
-    .stApp {
-        animation: softRainbowBg 15s ease infinite;
-    }
+    .stApp {{
+        {bg_style}
+    }}
 
-    @keyframes floatUpDown {
-        0% { transform: translateY(0px); }
-        50% { transform: translateY(-8px); }
-        100% { transform: translateY(0px); }
-    }
+    @keyframes floatUpDown {{
+        0% {{ transform: translateY(0px); }}
+        50% {{ transform: translateY(-8px); }}
+        100% {{ transform: translateY(0px); }}
+    }}
 
-    .animated-title-container {
+    .animated-title-container {{
         display: flex;
         align-items: center;
         gap: 15px;
         animation: floatUpDown 2.5s ease-in-out infinite;
-    }
+    }}
 
-    .header-logo {
+    .header-logo {{
         width: 45px;
         height: 45px;
         border-radius: 50%;
         object-fit: cover;
         border: 2px solid #ff9a9e;
-    }
+    }}
 
-    .animated-title {
+    .animated-title {{
         color: #ffffff;
         margin: 0;
         font-size: 28px;
-    }
+    }}
 
-    div[data-testid="stChatInput"] {
+    div[data-testid="stChatInput"] {{
         border-radius: 8px !important;
         border: 1px solid #ccc;
-    }
-    div[data-testid="stChatInputSubmitButton"] {
+    }}
+    div[data-testid="stChatInputSubmitButton"] {{
         border-radius: 0px !important;
-    }
+    }}
 </style>
 """
 __streamlit__.markdown(st_css, unsafe_allow_html=True)
 
 # --- HEADER WITH LOGO ---
-if logo_file:
-    with open(logo_file, "rb") as f:
-        encoded_logo = base64.b64encode(f.read()).decode("utf-8")
-    
-    mime_type = "image/jpeg" if logo_file.endswith((".jpg", ".jpeg")) else "image/png"
-    
+if encoded_bg:
     header_html = f"""
     <div class="animated-title-container">
-        <img src="data:{mime_type};base64,{encoded_logo}" class="header-logo" alt="GKevin AI Logo">
+        <img src="data:{mime_type};base64,{encoded_bg}" class="header-logo" alt="GKevin AI Logo">
         <h1 class="animated-title">GKevin AI Assistant (WhatsApp Live)</h1>
     </div>
     """
@@ -308,11 +321,11 @@ if ikibazo := __streamlit__.chat_input("Type here...."):
             
         bytes_data = uploaded_file.getvalue()
         base64_image = base64.b64encode(bytes_data).decode('utf-8')
-        mime_type = uploaded_file.type
+        img_mime = uploaded_file.type
         
         chat_payload.append({
             "type": "image_url",
-            "image_url": {"url": f"data:{mime_type};base64,{base64_image}"}
+            "image_url": {"url": f"data:{img_mime};base64,{base64_image}"}
         })
 
     full_user_message = {"role": "user", "content": chat_payload}
