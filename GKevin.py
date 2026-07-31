@@ -13,7 +13,7 @@ import os
 # --- 1. PAGE CONFIG & LOGO (ai.png) SETUP ---
 __streamlit__.set_page_config(
     page_title="GKevin AI",
-    page_icon="ai.png" if os.path.exists("ai.png") else "🤖",
+    page_icon="ai.jpg" if os.path.exists("ai.jpg") else "🤖",
     layout="centered"
 )
 
