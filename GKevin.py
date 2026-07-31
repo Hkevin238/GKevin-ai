@@ -10,10 +10,17 @@ from flask import Flask, request, jsonify
 import requests
 import os
 
-# --- 1. PAGE CONFIG & LOGO (ai.png) SETUP ---
+# --- 0. LOGO FINDER (Ishaka fayili ya logo iri mu bubiko) ---
+logo_file = None
+for f in ["ai.jpg", "kvn.png", "ai.png"]:
+    if os.path.exists(f):
+        logo_file = f
+        break
+
+# --- 1. PAGE CONFIG & LOGO SETUP ---
 __streamlit__.set_page_config(
     page_title="GKevin AI",
-    page_icon="ai.jpg" if os.path.exists("ai.jpg") else "🤖",
+    page_icon=logo_file if logo_file else "🤖",
     layout="centered"
 )
 
@@ -174,13 +181,16 @@ st_css = """
 """
 __streamlit__.markdown(st_css, unsafe_allow_html=True)
 
-# --- HEADER WITH ai.png LOGO ---
-if os.path.exists("ai.png"):
-    with open("ai.png", "rb") as f:
+# --- HEADER WITH LOGO ---
+if logo_file:
+    with open(logo_file, "rb") as f:
         encoded_logo = base64.b64encode(f.read()).decode("utf-8")
+    
+    mime_type = "image/jpeg" if logo_file.endswith((".jpg", ".jpeg")) else "image/png"
+    
     header_html = f"""
     <div class="animated-title-container">
-        <img src="data:image/png;base64,{encoded_logo}" class="header-logo" alt="GKevin AI Logo">
+        <img src="data:{mime_type};base64,{encoded_logo}" class="header-logo" alt="GKevin AI Logo">
         <h1 class="animated-title">GKevin AI Assistant (WhatsApp Live)</h1>
     </div>
     """
@@ -205,10 +215,10 @@ if current_time - __streamlit__.session_state.last_notification_time >= 60:
     __streamlit__.session_state.last_notification_time = current_time
 
 
-# --- 4. SIDEBAR (CLEAR CHAT BUTTON) ---
+# --- 4. SIDEBAR (CLEAR CHAT BUTTON & LOGO) ---
 with __streamlit__.sidebar:
-    if os.path.exists("ai.png"):
-        __streamlit__.image("ai.png", width=80)
+    if logo_file:
+        __streamlit__.image(logo_file, width=80)
         
     __streamlit__.header("⚙️ Controls")
     
