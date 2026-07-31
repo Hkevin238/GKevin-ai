@@ -136,29 +136,25 @@ if "flask_started" not in __streamlit__.session_state:
     threading.Thread(target=run_flask, daemon=True).start()
 
 
-# --- STYLING & CUSTOM CSS WITH LOGO BACKGROUND ---
-bg_style = f"""
-    background-image: linear-gradient(rgba(18, 18, 30, 0.85), rgba(18, 18, 30, 0.85)), url("data:{mime_type};base64,{encoded_bg}");
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    background-attachment: fixed;
-""" if encoded_bg else """
-    animation: softRainbowBg 15s ease infinite;
-"""
-
+# --- STYLING & CUSTOM CSS (BACKGROUND LOGO + ANIMATED RAINBOW OVERLAY) ---
 st_css = f"""
 <style>
     @keyframes softRainbowBg {{
-        0% {{ background-color: #1a1a2e; }}
-        25% {{ background-color: #1f1a24; }}
-        50% {{ background-color: #1a202c; }}
-        75% {{ background-color: #201a22; }}
-        100% {{ background-color: #1a1a2e; }}
+        0% {{ background-color: rgba(26, 26, 46, 0.88); }}
+        25% {{ background-color: rgba(35, 22, 38, 0.88); }}
+        50% {{ background-color: rgba(22, 32, 44, 0.88); }}
+        75% {{ background-color: rgba(36, 22, 30, 0.88); }}
+        100% {{ background-color: rgba(26, 26, 46, 0.88); }}
     }}
 
     .stApp {{
-        {bg_style}
+        background-image: url("data:{mime_type};base64,{encoded_bg}");
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+        background-blend-mode: overlay;
+        animation: softRainbowBg 15s ease infinite;
     }}
 
     @keyframes floatUpDown {{
