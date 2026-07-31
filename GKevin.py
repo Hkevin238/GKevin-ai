@@ -23,12 +23,12 @@ mime_type = "image/jpeg"
 if logo_file:
     with open(logo_file, "rb") as f:
         encoded_bg = base64.b64encode(f.read()).decode("utf-8")
-    mime_type = "image/jpeg" if logo_file.endswith(("ai.jpg", "ai.jpg")) else "image/png"
+    mime_type = "image/jpeg" if logo_file.endswith((".jpg", ".jpeg")) else "image/png"
 
 # --- 1. PAGE CONFIG & LOGO SETUP ---
 __streamlit__.set_page_config(
     page_title="GKevin AI",
-    page_icon=logo_file if logo_file else "ai.jpg",
+    page_icon=logo_file if logo_file else "🤖",
     layout="centered"
 )
 
@@ -145,9 +145,14 @@ if "flask_started" not in __streamlit__.session_state:
     threading.Thread(target=run_flask, daemon=True).start()
 
 
-# --- STYLING & CUSTOM CSS (BACKGROUND LOGO + ANIMATED RAINBOW OVERLAY) ---
+# --- STYLING & CUSTOM CSS ---
 st_css = f"""
 <style>
+    /* Hisha utu-avatar n'utuntu twose tw'umuhondo twa Streamlit burundu */
+    div[data-testid="stChatMessageAvatar"] {{
+        display: none !important;
+    }}
+
     @keyframes softRainbowBg {{
         0% {{ background-color: rgba(26, 26, 46, 0.88); }}
         25% {{ background-color: rgba(35, 22, 38, 0.88); }}
@@ -250,10 +255,10 @@ with __streamlit__.sidebar:
     __streamlit__.info("GKevin AI Assistant is ready to help you instantly without any issue!")
 
 
-# --- 5. KWEREKANA UBUSOBANURO BW'IBIGANIRO (CHAT MESSAGES DISPLAY) ---
+# --- 5. KWEREKANA UBUSOBANURO BW'IBIGANIRO (WITHOUT AVATAR ICONS) ---
 for message in __streamlit__.session_state.messages:
     if message["role"] != "system":
-        with __streamlit__.chat_message(message["role"], avatar=None):
+        with __streamlit__.chat_message(message["role"]):
             content = message['content']
             if isinstance(content, list):
                 for item in content:
@@ -311,7 +316,7 @@ if ikibazo := __streamlit__.chat_input("Type here...."):
         full_query = f"{ikibazo}\n\nHere is information about the attached file ({uploaded_file.name}):\n{file_text_content}"
 
     if full_query:
-        __streamlit__.chat_message("user", avatar=None).markdown(ikibazo)
+        __streamlit__.chat_message("user").markdown(ikibazo)
         if uploaded_file is not None:
             if uploaded_file.type.startswith("audio/"):
                 __streamlit__.audio(uploaded_file)
@@ -321,7 +326,7 @@ if ikibazo := __streamlit__.chat_input("Type here...."):
         chat_payload.append({"type": "text", "text": full_query})
 
     if uploaded_file is not None and uploaded_file.type.startswith("image/"):
-        with __streamlit__.chat_message("user", avatar=None):
+        with __streamlit__.chat_message("user"):
             __streamlit__.image(uploaded_file)
             
         bytes_data = uploaded_file.getvalue()
