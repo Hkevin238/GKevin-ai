@@ -23,12 +23,12 @@ mime_type = "image/jpeg"
 if logo_file:
     with open(logo_file, "rb") as f:
         encoded_bg = base64.b64encode(f.read()).decode("utf-8")
-    mime_type = "image/jpeg" if logo_file.endswith((".jpg", ".jpeg")) else "image/png"
+    mime_type = "image/jpeg" if logo_file.endswith(("ai.jpg", "ai.jpg")) else "image/png"
 
 # --- 1. PAGE CONFIG & LOGO SETUP ---
 __streamlit__.set_page_config(
     page_title="GKevin AI",
-    page_icon=logo_file if logo_file else "🤖",
+    page_icon=logo_file if logo_file else "ai.jpg",
     layout="centered"
 )
 
