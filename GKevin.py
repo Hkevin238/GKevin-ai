@@ -28,7 +28,7 @@ if logo_file:
 # --- 1. PAGE CONFIG & LOGO SETUP ---
 __streamlit__.set_page_config(
     page_title="GKevin AI",
-    page_icon=logo_file if logo_file else "🤖",
+    page_icon=logo_file if logo_file else "ai.jpg",
     layout="centered"
 )
 
