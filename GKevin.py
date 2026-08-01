@@ -1,4 +1,5 @@
 import streamlit as __streamlit__
+import streamlit.components.v1 as components
 from openai import OpenAI
 import base64
 from PIL import Image
@@ -9,6 +10,29 @@ import threading
 from flask import Flask, request, jsonify
 import requests
 import os
+
+# --- 0. PWA CONFIGURATION INJECTION ---
+pwa_code = """
+<script>
+  // Injiza manifest.json mu mutwe wa HTML
+  if (!document.querySelector('link[rel="manifest"]')) {
+    let manifestLink = document.createElement('link');
+    manifestLink.rel = 'manifest';
+    manifestLink.href = '/manifest.json';
+    document.head.appendChild(manifestLink);
+  }
+
+  // Enregistra Service Worker ikoresha PWA
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/service-worker.js')
+        .then(reg => console.log('GKevin AI PWA Registered successfully!'))
+        .catch(err => console.log('GKevin AI PWA Registration failed:', err));
+    });
+  }
+</script>
+"""
+components.html(pwa_code, height=0, width=0)
 
 # --- 0. LOGO FINDER & BASE64 ENCODING ---
 logo_file = None
@@ -250,10 +274,9 @@ with __streamlit__.sidebar:
     __streamlit__.info("GKevin AI Assistant is ready to help you instantly without any issue!")
 
 
-# --- 5. KWEREKANA UBUSOBANURO BW'IBIGANIRO (SHYIRAHO LOGO YA AI.JPG KURI AI) ---
+# --- 5. KWEREKANA UBUSOBANURO BW'IBIGANIRO ---
 for message in __streamlit__.session_state.messages:
     if message["role"] != "system":
-        # AI ifata logo_file (ai.jpg), naho user akazaho emoji "👤"
         msg_avatar = logo_file if (message["role"] == "assistant" and logo_file) else ("🤖" if message["role"] == "assistant" else "👤")
         
         with __streamlit__.chat_message(message["role"], avatar=msg_avatar):
