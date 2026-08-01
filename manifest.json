@@ -1,0 +1,24 @@
+{
+  "short_name": "GKevin AI",
+  "name": "GKevin AI Assistant",
+  "description": "An intelligent AI assistant platform built by Kevin.",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/4712/4712109.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/4712/4712109.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#0e1117",
+  "theme_color": "#0e1117",
+  "display": "standalone",
+  "orientation": "portrait"
+}
