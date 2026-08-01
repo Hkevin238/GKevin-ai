@@ -11,29 +11,6 @@ from flask import Flask, request, jsonify
 import requests
 import os
 
-# --- 0. PWA CONFIGURATION INJECTION ---
-pwa_code = """
-<script>
-  // Injiza manifest.json mu mutwe wa HTML
-  if (!document.querySelector('link[rel="manifest"]')) {
-    let manifestLink = document.createElement('link');
-    manifestLink.rel = 'manifest';
-    manifestLink.href = '/manifest.json';
-    document.head.appendChild(manifestLink);
-  }
-
-  // Enregistra Service Worker ikoresha PWA
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('/service-worker.js')
-        .then(reg => console.log('GKevin AI PWA Registered successfully!'))
-        .catch(err => console.log('GKevin AI PWA Registration failed:', err));
-    });
-  }
-</script>
-"""
-components.html(pwa_code, height=0, width=0)
-
 # --- 0. LOGO FINDER & BASE64 ENCODING ---
 logo_file = None
 for f in ["ai.jpg", "kvn.png", "ai.png"]:
@@ -52,9 +29,56 @@ if logo_file:
 # --- 1. PAGE CONFIG & LOGO SETUP ---
 __streamlit__.set_page_config(
     page_title="GKevin AI",
-    page_icon="ai.jpg",
+    page_icon=logo_file if logo_file else "🤖",
     layout="centered"
 )
+
+# --- 2. ADVANCED PWA CONFIGURATION & MANIFEST OVERRIDE ---
+pwa_code = f"""
+<script>
+  function applyGKevinPWA() {{
+    // 1. Siba manifest isanzwe ya Streamlit
+    let oldManifest = document.querySelector('link[rel="manifest"]');
+    if (oldManifest) {{
+      oldManifest.remove();
+    }}
+
+    // 2. Shyiramo Manifest yacu ya GKevin AI
+    if (!document.querySelector('link[rel="manifest"][href="/manifest.json"]')) {{
+      let manifestLink = document.createElement('link');
+      manifestLink.rel = 'manifest';
+      manifestLink.href = '/manifest.json';
+      document.head.appendChild(manifestLink);
+    }}
+
+    // 3. Shyiramo Logo kuri Apple & Web Favicon
+    let logoData = "data:{mime_type};base64,{encoded_bg}";
+    if ("{encoded_bg}" !== "") {{
+      let appleIcon = document.createElement('link');
+      appleIcon.rel = 'apple-touch-icon';
+      appleIcon.href = logoData;
+      document.head.appendChild(appleIcon);
+    }}
+
+    // 4. Force App Title kuri GKevin AI
+    document.title = "GKevin AI";
+  }}
+
+  // Executing immediately and delayed for Streamlit hydrations
+  applyGKevinPWA();
+  setTimeout(applyGKevinPWA, 1000);
+
+  // 5. Register Service Worker ikoresha PWA
+  if ('serviceWorker' in navigator) {{
+    window.addEventListener('load', () => {{
+      navigator.serviceWorker.register('/service-worker.js')
+        .then(reg => console.log('GKevin AI PWA Registered successfully!'))
+        .catch(err => console.log('GKevin AI PWA Registration failed:', err));
+    }});
+  }}
+</script>
+"""
+components.html(pwa_code, height=0, width=0)
 
 # --- WHATSAPP PRODUCTION CREDENTIALS ---
 WHATSAPP_PHONE_NUMBER_ID = "1227756223755507"
