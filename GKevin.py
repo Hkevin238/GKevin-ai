@@ -11,6 +11,9 @@ from flask import Flask, request, jsonify
 import requests
 import os
 
+# --- LINK Y'AHO APK IRI (SHYIRAMO LINK YAWE NYAYO HANO) ---
+APK_DOWNLOAD_URL = "https://your-domain.com/GKevin_AI.apk"
+
 # --- 0. LOGO FINDER & BASE64 ENCODING ---
 logo_file = None
 for f in ["ai.jpg", "kvn.png", "ai.png"]:
@@ -252,19 +255,29 @@ st_css = f"""
 """
 __streamlit__.markdown(st_css, unsafe_allow_html=True)
 
-# --- HEADER WITH LOGO ---
+# --- HEADER WITH LOGO & DOWNLOAD BUTTON ---
 if encoded_bg:
     header_html = f"""
     <div class="animated-title-container">
         <img src="data:{mime_type};base64,{encoded_bg}" class="header-logo" alt="GKevin AI Logo">
-        <h1 class="animated-title">GKevin AI Assistant (Download Now)</h1>
+        <h1 class="animated-title">GKevin AI Assistant</h1>
     </div>
     """
     __streamlit__.markdown(header_html, unsafe_allow_html=True)
 else:
-    __streamlit__.markdown('<h1 class="animated-title">🤖 GKevin AI Assistant (Download Now)</h1>', unsafe_allow_html=True)
+    __streamlit__.markdown('<h1 class="animated-title">🤖 GKevin AI Assistant</h1>', unsafe_allow_html=True)
 
-__streamlit__.write("Now, GKevin AI Can be Downloaded | Built for You. WELCOME !")
+__streamlit__.write("Now, GKevin AI can be downloaded as an App! Built for You. WELCOME !")
+
+# --- BOUTON YA DOWNLOAD MU HEADER ---
+__streamlit__.link_button(
+    label="📲 Download GKevin AI App (APK)",
+    url=https://gkevin-ai.streamlit.app,
+    type="primary",
+    use_container_width=True
+)
+
+__streamlit__.markdown("---")
 
 # --- 3. SESSION STATE FOR SINGLE CHAT HISTORY ---
 if "messages" not in __streamlit__.session_state:
@@ -281,12 +294,21 @@ if current_time - __streamlit__.session_state.last_notification_time >= 60:
     __streamlit__.session_state.last_notification_time = current_time
 
 
-# --- 4. SIDEBAR (CLEAR CHAT BUTTON & LOGO) ---
+# --- 4. SIDEBAR (CONTROLS & DOWNLOAD LINK) ---
 with __streamlit__.sidebar:
     if logo_file:
         __streamlit__.image(logo_file, width=80)
         
     __streamlit__.header("⚙️ Controls")
+    
+    # Download Link muri Sidebar
+    __streamlit__.markdown("### 📱 Mobile App")
+    __streamlit__.link_button(
+        label="📥 Download APK",
+        url=APK_DOWNLOAD_URL,
+        use_container_width=True
+    )
+    __streamlit__.markdown("---")
     
     if __streamlit__.button("🗑️ Clear Chat History", use_container_width=True):
         __streamlit__.session_state.messages = [
