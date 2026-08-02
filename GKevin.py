@@ -11,11 +11,11 @@ from flask import Flask, request, jsonify
 import requests
 import os
 
-# --- LINK Y'AHO APK YA GKEVIN AI IRI (DIRECT DOWNLOAD LINK) ---
-# Shyiramo link y'ukuri yerekeza kuri fichier ya .apk (Urugero: GitHub Release Direct Link cyangwa Google Drive Direct Link)
-APK_DOWNLOAD_URL = "https://github.com/your-username/gkevin-ai/releases/download/v1.0/GKevin-AI.apk"
+# --- 1. DIRECT DOWNLOAD LINK YA APK ---
+# Shyiromo direct link y'ukuri yerekeza ku fichier ya APK (Urugero: GitHub Release Direct Link, Google Drive Direct Link, cyangwa MediaFire Direct Link)
+APK_DIRECT_LINK = "https://drive.google.com/uc?export=download&id=YOUR_FILE_ID_HERE"
 
-# --- 0. LOGO FINDER & BASE64 ENCODING ---
+# --- 2. LOGO FINDER & BASE64 ENCODING ---
 logo_file = None
 for f in ["ai.jpg", "kvn.png", "ai.png"]:
     if os.path.exists(f):
@@ -30,14 +30,14 @@ if logo_file:
         encoded_bg = base64.b64encode(f.read()).decode("utf-8")
     mime_type = "image/jpeg" if logo_file.endswith((".jpg", ".jpeg")) else "image/png"
 
-# --- 1. PAGE CONFIG & LOGO SETUP ---
+# --- 3. PAGE CONFIG ---
 __streamlit__.set_page_config(
     page_title="GKevin AI",
     page_icon=logo_file if logo_file else "🤖",
     layout="centered"
 )
 
-# --- 2. ADVANCED PWA CONFIGURATION & MANIFEST OVERRIDE ---
+# --- 4. ADVANCED PWA CONFIGURATION ---
 pwa_code = f"""
 <script>
   function applyGKevinPWA() {{
@@ -85,7 +85,7 @@ WHATSAPP_PHONE = "+1 (555) 664-6865"
 WEBHOOK_VERIFY_TOKEN = "gkevin_verify_token_123"
 WHATSAPP_ACCESS_TOKEN = "3GtWP41MHsU58iGAD61xtD42gjn_5zujVmnszLcxX2EJ1MgWm"
 
-# --- HUZA NA GROQ API UKORESHEJE STREAMLIT SECRETS ---
+# --- GROQ API INTEGRATION ---
 try:
     groq_api_key_val = __streamlit__.secrets["GROQ_API_KEY"]
 except Exception:
@@ -278,11 +278,11 @@ else:
 
 __streamlit__.write("Now, GKevin AI can be downloaded as an App! Built for You. WELCOME !")
 
-# --- DIRECT DOWNLOAD BUTTON (KUGIRA NGO IHITE ITANGIRA KWIDOWNLOADINGA) ---
+# --- DIRECT DOWNLOAD BUTTON (KUGIRA NGO IHITE ITANGIRA DOWNLOAD) ---
 col_btn1, col_btn2, col_btn3 = __streamlit__.columns([1, 2, 1])
 with col_btn2:
-    # Niba ufite APK fichier mu bubiko bwawe bwa local (mu folder imwe n'iyi code):
     if os.path.exists("GKevin-AI.apk"):
+        # Niba fichier ya APK iri mu bubiko burohereje kuri server (local file)
         with open("GKevin-AI.apk", "rb") as fp:
             __streamlit__.download_button(
                 label="📲 Download GKevin AI App",
@@ -292,17 +292,31 @@ with col_btn2:
                 use_container_width=True
             )
     else:
-        # Niba ikoresha direct URL yo kuri internet
-        __streamlit__.link_button(
-            label="📲 Download GKevin AI App",
-            url=APK_DOWNLOAD_URL,
-            type="primary",
-            use_container_width=True
-        )
+        # Direct Download Link ikoresheje HTML tag `download` ihita itangira download mu buryo bwihuse
+        direct_btn_code = f"""
+        <div style="text-align: center;">
+            <a href="{APK_DIRECT_LINK}" download="GKevin-AI.apk" target="_top" style="
+                background-color: #ff4b4b;
+                color: white;
+                padding: 12px 20px;
+                text-decoration: none;
+                font-weight: bold;
+                font-family: sans-serif;
+                border-radius: 10px;
+                display: block;
+                text-align: center;
+                transition: all 0.3s ease-in-out;
+            " onmouseover="this.style.backgroundColor='#87CEEB'; this.style.color='black';"
+               onmouseout="this.style.backgroundColor='#ff4b4b'; this.style.color='white';">
+                📲 Download GKevin AI App
+            </a>
+        </div>
+        """
+        components.html(direct_btn_code, height=50)
 
 __streamlit__.markdown("---")
 
-# --- 3. SESSION STATE FOR SINGLE CHAT HISTORY ---
+# --- 5. SESSION STATE FOR SINGLE CHAT HISTORY ---
 if "messages" not in __streamlit__.session_state:
     __streamlit__.session_state.messages = [
         {"role": "system", "content": SYSTEM_PROMPT}
@@ -317,14 +331,13 @@ if current_time - __streamlit__.session_state.last_notification_time >= 60:
     __streamlit__.session_state.last_notification_time = current_time
 
 
-# --- 4. SIDEBAR (CONTROLS & DOWNLOAD LINK) ---
+# --- 6. SIDEBAR CONTROLS & DOWNLOAD LINK ---
 with __streamlit__.sidebar:
     if logo_file:
         __streamlit__.image(logo_file, width=80)
         
     __streamlit__.header("⚙️ Controls")
     
-    # Download Link muri Sidebar iringaniye
     __streamlit__.markdown("### 📱 Mobile App")
     if os.path.exists("GKevin-AI.apk"):
         with open("GKevin-AI.apk", "rb") as fp:
@@ -336,11 +349,27 @@ with __streamlit__.sidebar:
                 use_container_width=True
             )
     else:
-        __streamlit__.link_button(
-            label="📥 Download GKevin AI",
-            url=APK_DOWNLOAD_URL,
-            use_container_width=True
-        )
+        sidebar_direct_btn = f"""
+        <div style="text-align: center;">
+            <a href="{APK_DIRECT_LINK}" download="GKevin-AI.apk" target="_top" style="
+                background-color: #0e1117;
+                color: white;
+                border: 1px solid #4f5b66;
+                padding: 10px 15px;
+                text-decoration: none;
+                font-weight: bold;
+                font-family: sans-serif;
+                border-radius: 8px;
+                display: block;
+                text-align: center;
+                transition: all 0.3s ease-in-out;
+            " onmouseover="this.style.backgroundColor='#87CEEB'; this.style.color='black';"
+               onmouseout="this.style.backgroundColor='#0e1117'; this.style.color='white';">
+                📥 Download GKevin AI
+            </a>
+        </div>
+        """
+        components.html(sidebar_direct_btn, height=50)
         
     __streamlit__.markdown("---")
     
@@ -354,7 +383,7 @@ with __streamlit__.sidebar:
     __streamlit__.info("GKevin AI Assistant is ready to help you instantly without any issue!")
 
 
-# --- 5. KWEREKANA UBUSOBANURO BW'IBIGANIRO ---
+# --- 7. KWEREKANA UBUSOBANURO BW'IBIGANIRO ---
 for message in __streamlit__.session_state.messages:
     if message["role"] != "system":
         msg_avatar = logo_file if (message["role"] == "assistant" and logo_file) else ("🤖" if message["role"] == "assistant" else "👤")
@@ -370,7 +399,7 @@ for message in __streamlit__.session_state.messages:
             else:
                 __streamlit__.markdown(content)
 
-# --- 6. FILE UPLOADER ---
+# --- 8. FILE UPLOADER ---
 col_file, col_empty = __streamlit__.columns([3, 7])
 with col_file:
     uploaded_file = __streamlit__.file_uploader(
@@ -389,7 +418,7 @@ if uploaded_file is not None:
     else:
         __streamlit__.caption(f"📎 File attached: {uploaded_file.name}")
 
-# --- 7. CHAT INPUT & GROQ HANDLER ---
+# --- 9. CHAT INPUT & GROQ HANDLER ---
 if ikibazo := __streamlit__.chat_input("Type here...."):
     
     chat_payload = []
