@@ -11,8 +11,8 @@ from flask import Flask, request, jsonify
 import requests
 import os
 
-# --- LINK Y'AHO APK IRI (SHYIRAMO LINK YAWE NYAYO HANO) ---
-APK_DOWNLOAD_URL = "https://your-domain.com/GKevin_AI.apk"
+# --- LINK Y'AHO APP YA GKEVIN AI IRI ---
+APK_DOWNLOAD_URL = "https://gkevin-ai.streamlit.app"
 
 # --- 0. LOGO FINDER & BASE64 ENCODING ---
 logo_file = None
@@ -271,8 +271,8 @@ __streamlit__.write("Now, GKevin AI can be downloaded as an App! Built for You. 
 
 # --- BOUTON YA DOWNLOAD MU HEADER ---
 __streamlit__.link_button(
-    label="📲 Download GKevin AI App (APK)",
-    url=https://gkevin-ai.streamlit.app,
+    label="📲 Download GKevin AI App",
+    url=APK_DOWNLOAD_URL,
     type="primary",
     use_container_width=True
 )
@@ -304,7 +304,7 @@ with __streamlit__.sidebar:
     # Download Link muri Sidebar
     __streamlit__.markdown("### 📱 Mobile App")
     __streamlit__.link_button(
-        label="📥 Download APK",
+        label="📥 Open/Download GKevin AI",
         url=APK_DOWNLOAD_URL,
         use_container_width=True
     )
