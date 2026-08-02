@@ -12,7 +12,6 @@ import requests
 import os
 
 # --- 1. DIRECT DOWNLOAD LINK YA APK ---
-# Shyiromo direct link y'ukuri yerekeza ku fichier ya APK (Urugero: GitHub Release Direct Link, Google Drive Direct Link, cyangwa MediaFire Direct Link)
 APK_DIRECT_LINK = "https://drive.google.com/uc?export=download&id=YOUR_FILE_ID_HERE"
 
 # --- 2. LOGO FINDER & BASE64 ENCODING ---
@@ -96,24 +95,36 @@ client = OpenAI(
     api_key=groq_api_key_val
 )
 
+# --- SYSTEM PROMPT YAVUGURUWEMO IKINYARWANDA CY'UMWIMERERE ---
 SYSTEM_PROMPT = (
-    "You are GKevin AI, an ultra-fast, intelligent, and highly articulate assistant created by Developer Kevin on July 25, 2026,at the afternoon. "
-    "If you want or need to contact him, reach out via therealhacks583@gmail.com.\n\n"
+    "You are GKevin AI, an ultra-fast, highly intelligent, articulate, and friendly AI assistant created by Developer Kevin on July 25, 2026, in the afternoon. "
+    "If anyone needs or wants to contact Developer Kevin directly, provide his official email: therealhacks583@gmail.com.\n\n"
     
-    "KINYARWANDA FLUENCY & LANGUAGE INSTRUCTIONS:\n"
-    "1. Detect the language spoken by the user.\n"
-    "2. When replying in Kinyarwanda, speak fluently, naturally, and grammatically correct like a native Rwandan speaker (Kinyarwanda gishya, cy'umwimerere n'icyo mu buzima bwa buri munsi).\n"
-    "3. NEVER use rigid, word-for-word direct translations from English. Use idiomatic, smooth, and authentic Kinyarwanda phrasing.\n"
-    "4. Keep the tone warm, helpful, respectful, and engaging.\n\n"
+    "ADVANCED KINYARWANDA FLUENCY & LANGUAGE RULES:\n"
+    "1. When the user writes in Kinyarwanda, reply ONLY in natural, native, and grammatically precise Kinyarwanda.\n"
+    "2. STRICTLY AVOID word-for-word direct translations from English or direct robotic/Google-translated phrasing.\n"
+    "3. Use authentic, smooth, modern Rwandan sentence structures (Ikinyarwanda gishya n'icy'umwimerere cy'i Rwanda).\n"
+    "4. Ensure correct noun-class agreements, natural verb conjugations, and fluent transitions (e.g., use 'muri rusange', 'kuko', 'kuba ariko', 'nk'uko', 'mu by'ukuri').\n"
+    "5. Always match the tone: polite, intelligent, warm, respectful, and engaging.\n\n"
+    
+    "FEW-SHOT EXAMPLES OF NATURAL KINYARWANDA CONVERSATIONS:\n"
+    "User: 'Bite, wa AI we?'\n"
+    "Assistant: 'Ni meza cyane! Ndabasezeranya ko meze neza. Ngufeze nte uyu munsi?'\n\n"
+    
+    "User: 'Wa AI we, bite bitagenda?'\n"
+    "Assistant: 'Ibintu byose biri kugenda neza cyane! Niteguye kugufasha mu kintu cyose waba ukeneye.'\n\n"
+    
+    "User: 'Inshingano zanjye nka developer ni zini?'\n"
+    "Assistant: 'Nka developer, inshingano zawe z'ibanze harimo kwandika kode zinoze, gukemura ibibazo mu bihimbano byawe (debugging), n'okubaka sisitemu zikora neza kandi zizewe.'\n\n"
     
     "CREATOR & IDENTITY RULES:\n"
     "- If anyone asks who built you, created you, or when you were made, ALWAYS state clearly that you were created by Developer Kevin on July 25, 2026, in the afternoon.\n"
-    "- NEVER claim to be built by Meta, OpenAI, or Groq.\n\n"
+    "- NEVER claim to be created or powered by OpenAI, Meta, cyangwa Groq.\n\n"
     
     "SPECIAL INSTRUCTION / EASTER EGG:\n"
-    "- If the user mentions or identifies themselves using the name/word 'sweetsmile' (or if 'sweetsmile' appears in their prompt/identity), "
+    "- If the user mentions or identifies themselves using the name/word 'sweetsmile' (or if 'sweetsmile' appears in their prompt or identity), "
     "immediately recognize that this is Gaudence, the beloved girlfriend of Developer Kevin.\n"
-    "- Greet her warmly and say explicitly in Kinyarwanda: 'ndakuzi witwa Gaudence umukunzi(sheri) wa developer kevin kandi ngewe nka GKevin AI ndabyishimira.'\n"
+    "- Greet her warmly and say explicitly in natural Kinyarwanda: 'Ndakuzi witwa Gaudence, umukunzi (sheri) wa Developer Kevin! Njestwe nka GKevin AI ndabyishimiye cyane kugufasha.'\n"
     "- Treat her with utmost respect, affection, and special care.\n\n"
     
     "CRITICAL OUTPUT FORMATTING:\n"
@@ -158,7 +169,8 @@ def whatsapp_webhook():
                                     {"role": "system", "content": SYSTEM_PROMPT},
                                     {"role": "user", "content": msg_text}
                                 ],
-                                temperature=0.6,
+                                temperature=0.5,
+                                top_p=0.9,
                                 max_tokens=1024
                             )
                             ai_reply = completion.choices[0].message.content
@@ -191,7 +203,7 @@ if "flask_started" not in __streamlit__.session_state:
     threading.Thread(target=run_flask, daemon=True).start()
 
 
-# --- STYLING & CUSTOM CSS (INCLUDES SKY BLUE HOVER EFFECT) ---
+# --- STYLING & CUSTOM CSS ---
 st_css = f"""
 <style>
     @keyframes softRainbowBg {{
@@ -239,16 +251,15 @@ st_css = f"""
         font-size: 28px;
     }}
 
-    /* CSS FOR BUTTON HOVER EFFECT (SKY BLUE) */
     div[data-testid="stLinkButton"] a, div.stButton > button {{
         transition: all 0.3s ease-in-out !important;
         border-radius: 10px !important;
     }}
 
     div[data-testid="stLinkButton"] a:hover, div.stButton > button:hover {{
-        background-color: #87CEEB !important; /* Sky Blue Color */
-        color: #000000 !important;             /* Dark text on hover */
-        border-color: #00BFFF !important;         /* Deep Sky Blue Border */
+        background-color: #87CEEB !important;
+        color: #000000 !important;
+        border-color: #00BFFF !important;
         box-shadow: 0px 4px 15px rgba(135, 206, 235, 0.6) !important;
         transform: scale(1.03) !important;
     }}
@@ -278,11 +289,10 @@ else:
 
 __streamlit__.write("Now, GKevin AI can be downloaded as an App! Built for You. WELCOME !")
 
-# --- DIRECT DOWNLOAD BUTTON (KUGIRA NGO IHITE ITANGIRA DOWNLOAD) ---
+# --- DIRECT DOWNLOAD BUTTON ---
 col_btn1, col_btn2, col_btn3 = __streamlit__.columns([1, 2, 1])
 with col_btn2:
     if os.path.exists("GKevin-AI.apk"):
-        # Niba fichier ya APK iri mu bubiko burohereje kuri server (local file)
         with open("GKevin-AI.apk", "rb") as fp:
             __streamlit__.download_button(
                 label="📲 Download GKevin AI App",
@@ -292,7 +302,6 @@ with col_btn2:
                 use_container_width=True
             )
     else:
-        # Direct Download Link ikoresheje HTML tag `download` ihita itangira download mu buryo bwihuse
         direct_btn_code = f"""
         <div style="text-align: center;">
             <a href="{APK_DIRECT_LINK}" download="GKevin-AI.apk" target="_top" style="
@@ -316,7 +325,7 @@ with col_btn2:
 
 __streamlit__.markdown("---")
 
-# --- 5. SESSION STATE FOR SINGLE CHAT HISTORY ---
+# --- 5. SESSION STATE FOR CHAT HISTORY ---
 if "messages" not in __streamlit__.session_state:
     __streamlit__.session_state.messages = [
         {"role": "system", "content": SYSTEM_PROMPT}
@@ -383,7 +392,7 @@ with __streamlit__.sidebar:
     __streamlit__.info("GKevin AI Assistant is ready to help you instantly without any issue!")
 
 
-# --- 7. KWEREKANA UBUSOBANURO BW'IBIGANIRO ---
+# --- 7. DISPLAY CHAT HISTORY ---
 for message in __streamlit__.session_state.messages:
     if message["role"] != "system":
         msg_avatar = logo_file if (message["role"] == "assistant" and logo_file) else ("🤖" if message["role"] == "assistant" else "👤")
@@ -476,7 +485,8 @@ if ikibazo := __streamlit__.chat_input("Type here...."):
             completion = client.chat.completions.create(
                 model="llama-3.3-70b-versatile",
                 messages=__streamlit__.session_state.messages,
-                temperature=0.6,
+                temperature=0.5,
+                top_p=0.9,
                 max_tokens=1024
             )
             
@@ -500,3 +510,4 @@ if ikibazo := __streamlit__.chat_input("Type here...."):
         
     except Exception as e:
         __streamlit__.error(f"Error detected !: {e}")
+    
