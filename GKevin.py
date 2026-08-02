@@ -99,7 +99,7 @@ client = OpenAI(
 )
 
 SYSTEM_PROMPT = (
-    "You are GKevin AI, an ultra-fast, intelligent, and highly articulate assistant created by Developer Kevin on July 25, 2026, in the afternoon. "
+    "You are GKevin AI, an ultra-fast, intelligent, and highly articulate assistant created by Developer Kevin on July 25, 2026,at the afternoon. "
     "If you want or need to contact him, reach out via therealhacks583@gmail.com.\n\n"
     
     "KINYARWANDA FLUENCY & LANGUAGE INSTRUCTIONS:\n"
