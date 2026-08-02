@@ -40,13 +40,11 @@ __streamlit__.set_page_config(
 pwa_code = f"""
 <script>
   function applyGKevinPWA() {{
-    // 1. Siba manifest isanzwe ya Streamlit
     let oldManifest = document.querySelector('link[rel="manifest"]');
     if (oldManifest) {{
       oldManifest.remove();
     }}
 
-    // 2. Shyiramo Manifest yacu ya GKevin AI
     if (!document.querySelector('link[rel="manifest"][href="/manifest.json"]')) {{
       let manifestLink = document.createElement('link');
       manifestLink.rel = 'manifest';
@@ -54,7 +52,6 @@ pwa_code = f"""
       document.head.appendChild(manifestLink);
     }}
 
-    // 3. Shyiramo Logo kuri Apple & Web Favicon
     let logoData = "data:{mime_type};base64,{encoded_bg}";
     if ("{encoded_bg}" !== "") {{
       let appleIcon = document.createElement('link');
@@ -63,15 +60,12 @@ pwa_code = f"""
       document.head.appendChild(appleIcon);
     }}
 
-    // 4. Force App Title kuri GKevin AI
     document.title = "GKevin AI";
   }}
 
-  // Executing immediately and delayed for Streamlit hydrations
   applyGKevinPWA();
   setTimeout(applyGKevinPWA, 1000);
 
-  // 5. Register Service Worker ikoresha PWA
   if ('serviceWorker' in navigator) {{
     window.addEventListener('load', () => {{
       navigator.serviceWorker.register('/service-worker.js')
@@ -196,7 +190,7 @@ if "flask_started" not in __streamlit__.session_state:
     threading.Thread(target=run_flask, daemon=True).start()
 
 
-# --- STYLING & CUSTOM CSS ---
+# --- STYLING & CUSTOM CSS (INCLUDES SKY BLUE HOVER EFFECT) ---
 st_css = f"""
 <style>
     @keyframes softRainbowBg {{
@@ -244,6 +238,20 @@ st_css = f"""
         font-size: 28px;
     }}
 
+    /* CSS FOR BUTTON HOVER EFFECT (SKY BLUE) */
+    div[data-testid="stLinkButton"] a, div.stButton > button {{
+        transition: all 0.3s ease-in-out !important;
+        border-radius: 10px !important;
+    }}
+
+    div[data-testid="stLinkButton"] a:hover, div.stButton > button:hover {{
+        background-color: #87CEEB !important; /* Sky Blue Color */
+        color: #000000 !important;             /* Dark text on hover */
+        border-color: #00BFFF !important;         /* Deep Sky Blue Border */
+        box-shadow: 0px 4px 15px rgba(135, 206, 235, 0.6) !important;
+        transform: scale(1.03) !important;
+    }}
+
     div[data-testid="stChatInput"] {{
         border-radius: 8px !important;
         border: 1px solid #ccc;
@@ -255,7 +263,7 @@ st_css = f"""
 """
 __streamlit__.markdown(st_css, unsafe_allow_html=True)
 
-# --- HEADER WITH LOGO & DOWNLOAD BUTTON ---
+# --- HEADER WITH LOGO ---
 if encoded_bg:
     header_html = f"""
     <div class="animated-title-container">
@@ -269,13 +277,15 @@ else:
 
 __streamlit__.write("Now, GKevin AI can be downloaded as an App! Built for You. WELCOME !")
 
-# --- BOUTON YA DOWNLOAD MU HEADER ---
-__streamlit__.link_button(
-    label="📲 Download GKevin AI App",
-    url=APK_DOWNLOAD_URL,
-    type="primary",
-    use_container_width=True
-)
+# --- BOUTON IRINGANIYE (NOT FULL WIDTH) N'IBA KOZEHO SKY BLUE HOVER ---
+col_btn1, col_btn2, col_btn3 = __streamlit__.columns([1, 2, 1])
+with col_btn2:
+    __streamlit__.link_button(
+        label="📲 Download GKevin AI App",
+        url=APK_DOWNLOAD_URL,
+        type="primary",
+        use_container_width=True
+    )
 
 __streamlit__.markdown("---")
 
@@ -301,7 +311,7 @@ with __streamlit__.sidebar:
         
     __streamlit__.header("⚙️ Controls")
     
-    # Download Link muri Sidebar
+    # Download Link muri Sidebar iringaniye
     __streamlit__.markdown("### 📱 Mobile App")
     __streamlit__.link_button(
         label="📥 Open/Download GKevin AI",
