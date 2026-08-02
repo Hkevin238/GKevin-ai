@@ -257,14 +257,14 @@ if encoded_bg:
     header_html = f"""
     <div class="animated-title-container">
         <img src="data:{mime_type};base64,{encoded_bg}" class="header-logo" alt="GKevin AI Logo">
-        <h1 class="animated-title">GKevin AI Assistant (WhatsApp Live)</h1>
+        <h1 class="animated-title">GKevin AI Assistant (Download Now)</h1>
     </div>
     """
     __streamlit__.markdown(header_html, unsafe_allow_html=True)
 else:
-    __streamlit__.markdown('<h1 class="animated-title">🤖 GKevin AI Assistant (WhatsApp Live)</h1>', unsafe_allow_html=True)
+    __streamlit__.markdown('<h1 class="animated-title">🤖 GKevin AI Assistant (Download Now)</h1>', unsafe_allow_html=True)
 
-__streamlit__.write("Recently, GKevin AI will be connected to WhatsApp | Built for You. WELCOME !")
+__streamlit__.write("Now, GKevin AI Can be Downloaded | Built for You. WELCOME !")
 
 # --- 3. SESSION STATE FOR SINGLE CHAT HISTORY ---
 if "messages" not in __streamlit__.session_state:
