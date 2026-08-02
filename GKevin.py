@@ -11,8 +11,9 @@ from flask import Flask, request, jsonify
 import requests
 import os
 
-# --- LINK Y'AHO APP YA GKEVIN AI IRI ---
-APK_DOWNLOAD_URL = "https://gkevin-ai.streamlit.app"
+# --- LINK Y'AHO APK YA GKEVIN AI IRI (DIRECT DOWNLOAD LINK) ---
+# Shyiramo link y'ukuri yerekeza kuri fichier ya .apk (Urugero: GitHub Release Direct Link cyangwa Google Drive Direct Link)
+APK_DOWNLOAD_URL = "https://github.com/your-username/gkevin-ai/releases/download/v1.0/GKevin-AI.apk"
 
 # --- 0. LOGO FINDER & BASE64 ENCODING ---
 logo_file = None
@@ -277,15 +278,27 @@ else:
 
 __streamlit__.write("Now, GKevin AI can be downloaded as an App! Built for You. WELCOME !")
 
-# --- BOUTON IRINGANIYE (NOT FULL WIDTH) N'IBA KOZEHO SKY BLUE HOVER ---
+# --- DIRECT DOWNLOAD BUTTON (KUGIRA NGO IHITE ITANGIRA KWIDOWNLOADINGA) ---
 col_btn1, col_btn2, col_btn3 = __streamlit__.columns([1, 2, 1])
 with col_btn2:
-    __streamlit__.link_button(
-        label="📲 Download GKevin AI App",
-        url=APK_DOWNLOAD_URL,
-        type="primary",
-        use_container_width=True
-    )
+    # Niba ufite APK fichier mu bubiko bwawe bwa local (mu folder imwe n'iyi code):
+    if os.path.exists("GKevin-AI.apk"):
+        with open("GKevin-AI.apk", "rb") as fp:
+            __streamlit__.download_button(
+                label="📲 Download GKevin AI App",
+                data=fp,
+                file_name="GKevin-AI.apk",
+                mime="application/vnd.android.package-archive",
+                use_container_width=True
+            )
+    else:
+        # Niba ikoresha direct URL yo kuri internet
+        __streamlit__.link_button(
+            label="📲 Download GKevin AI App",
+            url=APK_DOWNLOAD_URL,
+            type="primary",
+            use_container_width=True
+        )
 
 __streamlit__.markdown("---")
 
@@ -313,11 +326,22 @@ with __streamlit__.sidebar:
     
     # Download Link muri Sidebar iringaniye
     __streamlit__.markdown("### 📱 Mobile App")
-    __streamlit__.link_button(
-        label="📥 Open/Download GKevin AI",
-        url=APK_DOWNLOAD_URL,
-        use_container_width=True
-    )
+    if os.path.exists("GKevin-AI.apk"):
+        with open("GKevin-AI.apk", "rb") as fp:
+            __streamlit__.download_button(
+                label="📥 Download GKevin AI APK",
+                data=fp,
+                file_name="GKevin-AI.apk",
+                mime="application/vnd.android.package-archive",
+                use_container_width=True
+            )
+    else:
+        __streamlit__.link_button(
+            label="📥 Download GKevin AI",
+            url=APK_DOWNLOAD_URL,
+            use_container_width=True
+        )
+        
     __streamlit__.markdown("---")
     
     if __streamlit__.button("🗑️ Clear Chat History", use_container_width=True):
