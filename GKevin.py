@@ -90,11 +90,11 @@ WHATSAPP_PHONE = "+1 (555) 664-6865"
 WEBHOOK_VERIFY_TOKEN = "gkevin_verify_token_123"
 WHATSAPP_ACCESS_TOKEN = "3GtWP41MHsU58iGAD61xtD42gjn_5zujVmnszLcxX2EJ1MgWm"
 
-# --- HUZA NA GROQ API UKORESHEJE STREAMLIT SECRETS ---
+# --- HUZA NA GROQ API UKORESHEJE STREAMLIT SECRETS / KEY NSHYA ---
 try:
     groq_api_key_val = __streamlit__.secrets["GROQ_API_KEY"]
 except Exception:
-    groq_api_key_val = "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"
+    groq_api_key_val = "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"
 
 client = OpenAI(
     base_url="https://api.groq.com/openai/v1",
@@ -189,7 +189,10 @@ def whatsapp_webhook():
         return jsonify({"status": "error", "message": str(e)}), 500
 
 def run_flask():
-    flask_app.run(port=5000, debug=False, use_reloader=False)
+    try:
+        flask_app.run(port=5000, debug=False, use_reloader=False)
+    except Exception:
+        pass
 
 if "flask_started" not in __streamlit__.session_state:
     __streamlit__.session_state.flask_started = True
