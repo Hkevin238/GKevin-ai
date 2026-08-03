@@ -1,20 +1,9 @@
-import streamlit as __streamlit__
-import streamlit.components.v1 as components
+import streamlit as st
 from openai import OpenAI
 import base64
-from PIL import Image
-import io
-import pypdf
-import time
-import threading
-from flask import Flask, request, jsonify
-import requests
 import os
 
-# --- 1. DIRECT DOWNLOAD LINK YA APK ---
-APK_DIRECT_LINK = "https://drive.google.com/uc?export=download&id=YOUR_FILE_ID_HERE"
-
-# --- 2. LOGO FINDER & BASE64 ENCODING ---
+# --- 1. LOGO FINDER & BASE64 ENCODING ---
 logo_file = None
 for f in ["ai.jpg", "kvn.png", "ai.png"]:
     if os.path.exists(f):
@@ -25,27 +14,23 @@ encoded_bg = ""
 mime_type = "image/jpeg"
 
 if logo_file:
-    with open(logo_file, "rb") as f:
-        encoded_bg = base64.b64encode(f.read()).decode("utf-8")
-    mime_type = "image/jpeg" if logo_file.endswith((".jpg", ".jpeg")) else "image/png"
+    try:
+        with open(logo_file, "rb") as f:
+            encoded_bg = base64.b64encode(f.read()).decode("utf-8")
+        mime_type = "image/jpeg" if logo_file.endswith((".jpg", ".jpeg")) else "image/png"
+    except Exception:
+        pass
 
-# --- 3. PAGE CONFIG ---
-__streamlit__.set_page_config(
+# --- 2. PAGE CONFIG ---
+st.set_page_config(
     page_title="GKevin AI",
     page_icon=logo_file if logo_file else "🤖",
     layout="centered"
 )
 
-# --- WHATSAPP PRODUCTION CREDENTIALS ---
-WHATSAPP_PHONE_NUMBER_ID = "1227756223755507"
-WHATSAPP_BUSINESS_ACCOUNT_ID = "1186592933667697"
-WHATSAPP_PHONE = "+1 (555) 664-6865"
-WEBHOOK_VERIFY_TOKEN = "gkevin_verify_token_123"
-WHATSAPP_ACCESS_TOKEN = "3GtWP41MHsU58iGAD61xtD42gjn_5zujVmnszLcxX2EJ1MgWm"
-
-# --- GROQ API INTEGRATION ---
+# --- 3. GROQ API INTEGRATION ---
 try:
-    groq_api_key_val = __streamlit__.secrets["GROQ_API_KEY"]
+    groq_api_key_val = st.secrets["GROQ_API_KEY"]
 except Exception:
     groq_api_key_val = "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"
 
@@ -54,7 +39,6 @@ client = OpenAI(
     api_key=groq_api_key_val
 )
 
-# Koresha model yizewe ku buryo buhamye muri Groq
 MODEL_NAME = "llama-3.3-70b-versatile"
 
 SYSTEM_PROMPT = (
@@ -71,52 +55,29 @@ SYSTEM_PROMPT = (
     "- Always output ONLY the final direct answer to the user."
 )
 
-# --- FLASK SERVER YA WHATSAPP WEBHOOK (Safe Threading) ---
-flask_app = Flask(__name__)
+# --- 4. CHAT HISTORY INITIALIZATION ---
+if "messages" not in st.session_state:
+    st.session_state.messages = [{"role": "system", "content": SYSTEM_PROMPT}]
 
-@flask_app.route("/webhook", methods=["GET"])
-def verify_webhook():
-    mode = request.args.get("hub.mode")
-    token = request.args.get("hub.verify_token")
-    challenge = request.args.get("hub.challenge")
-    
-    if mode and token:
-        if mode == "subscribe" and token == WEBHOOK_VERIFY_TOKEN:
-            return challenge, 200
-        else:
-            return "Verification failed", 403
-    return "Hello World", 200
-
-def run_flask():
-    try:
-        flask_app.run(port=5000, debug=False, use_reloader=False)
-    except Exception:
-        pass # Rinda ko Streamlit icika niba port iri occupied
-
-if "flask_started" not in __streamlit__.session_state:
-    __streamlit__.session_state.flask_started = True
-    threading.Thread(target=run_flask, daemon=True).start()
-
-# --- CHAT INPUT & HANDLER ---
-if "messages" not in __streamlit__.session_state:
-    __streamlit__.session_state.messages = [{"role": "system", "content": SYSTEM_PROMPT}]
-
-for message in __streamlit__.session_state.messages:
+# --- DISPLAY MESSAGES ---
+for message in st.session_state.messages:
     if message["role"] != "system":
-        with __streamlit__.chat_message(message["role"]):
-            __streamlit__.markdown(message["content"])
+        avatar = logo_file if (message["role"] == "assistant" and logo_file) else None
+        with st.chat_message(message["role"], avatar=avatar):
+            st.markdown(message["content"])
 
-if ikibazo := __streamlit__.chat_input("Type here...."):
-    __streamlit__.session_state.messages.append({"role": "user", "content": ikibazo})
+# --- CHAT INPUT & GROQ API CALL ---
+if ikibazo := st.chat_input("Type here...."):
+    st.session_state.messages.append({"role": "user", "content": ikibazo})
     
-    with __streamlit__.chat_message("user"):
-        __streamlit__.markdown(ikibazo)
+    with st.chat_message("user"):
+        st.markdown(ikibazo)
         
     try:
-        with __streamlit__.spinner("GKevin is thinking....."):
+        with st.spinner("GKevin is thinking....."):
             completion = client.chat.completions.create(
                 model=MODEL_NAME,
-                messages=__streamlit__.session_state.messages,
+                messages=st.session_state.messages,
                 temperature=0.5,
                 top_p=0.9,
                 max_tokens=1024
@@ -128,8 +89,8 @@ if ikibazo := __streamlit__.chat_input("Type here...."):
                 igisubizo_cya_ai = igisubizo_cya_ai.split("</think>")[-1].strip()
             igisubizo_cya_ai = igisubizo_cya_ai.replace("<think>", "").replace("</think>", "").strip()
             
-            __streamlit__.session_state.messages.append({"role": "assistant", "content": igisubizo_cya_ai})
-            __streamlit__.rerun()
+            st.session_state.messages.append({"role": "assistant", "content": igisubizo_cya_ai})
+            st.rerun()
             
     except Exception as e:
-        __streamlit__.error(f"Error detected: {e}")
+        st.error(f"Error detected: {e}")
