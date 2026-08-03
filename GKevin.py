@@ -47,7 +47,7 @@ WHATSAPP_ACCESS_TOKEN = "3GtWP41MHsU58iGAD61xtD42gjn_5zujVmnszLcxX2EJ1MgWm"
 try:
     groq_api_key_val = __streamlit__.secrets["GROQ_API_KEY"]
 except Exception:
-    groq_api_key_val = "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"
+    groq_api_key_val = "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"
 
 client = OpenAI(
     base_url="https://api.groq.com/openai/v1",
