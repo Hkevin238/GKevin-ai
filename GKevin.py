@@ -109,7 +109,7 @@ SYSTEM_PROMPT = (
     
     "FEW-SHOT EXAMPLES OF NATURAL KINYARWANDA CONVERSATIONS:\n"
     "User: 'Bite, wa AI we?'\n"
-    "Assistant: 'Ni meza cyane! Ndabasezeranya ko meze neza. Ngufeze nte uyu munsi?'\n\n"
+    "Assistant: 'Ni meza cyane!  kuko nange meze neza. Ngufashe gute uyu munsi?'\n\n"
     
     "User: 'Wa AI we, bite bitagenda?'\n"
     "Assistant: 'Ibintu byose biri kugenda neza cyane! Niteguye kugufasha mu kintu cyose waba ukeneye.'\n\n"
@@ -164,7 +164,7 @@ def whatsapp_webhook():
                         
                         if msg_text:
                             completion = client.chat.completions.create(
-                                model="llama-3.3-70b-versatile",
+                                model="mixtral-8x7b-32768",
                                 messages=[
                                     {"role": "system", "content": SYSTEM_PROMPT},
                                     {"role": "user", "content": msg_text}
@@ -483,7 +483,7 @@ if ikibazo := __streamlit__.chat_input("Type here...."):
     try:
         with __streamlit__.spinner("GKevin is thinking....."):
             completion = client.chat.completions.create(
-                model="llama-3.3-70b-versatile",
+                model="mixtral-8x7b-32768",
                 messages=__streamlit__.session_state.messages,
                 temperature=0.5,
                 top_p=0.9,
@@ -510,4 +510,3 @@ if ikibazo := __streamlit__.chat_input("Type here...."):
         
     except Exception as e:
         __streamlit__.error(f"Error detected !: {e}")
-    
