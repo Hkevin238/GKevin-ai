@@ -54,7 +54,8 @@ client = OpenAI(
     api_key=groq_api_key_val
 )
 
-MODEL_NAME = "mixtral-8x7b-32768"
+# Koresha model yizewe ku buryo buhamye muri Groq
+MODEL_NAME = "llama-3.3-70b-versatile"
 
 SYSTEM_PROMPT = (
     "You are GKevin AI, an ultra-fast, highly intelligent, articulate, and friendly AI assistant created by Developer Kevin on July 25, 2026, in the afternoon. "
@@ -70,37 +71,65 @@ SYSTEM_PROMPT = (
     "- Always output ONLY the final direct answer to the user."
 )
 
-# --- CHAT INPUT & GROQ HANDLER ---
+# --- FLASK SERVER YA WHATSAPP WEBHOOK (Safe Threading) ---
+flask_app = Flask(__name__)
+
+@flask_app.route("/webhook", methods=["GET"])
+def verify_webhook():
+    mode = request.args.get("hub.mode")
+    token = request.args.get("hub.verify_token")
+    challenge = request.args.get("hub.challenge")
+    
+    if mode and token:
+        if mode == "subscribe" and token == WEBHOOK_VERIFY_TOKEN:
+            return challenge, 200
+        else:
+            return "Verification failed", 403
+    return "Hello World", 200
+
+def run_flask():
+    try:
+        flask_app.run(port=5000, debug=False, use_reloader=False)
+    except Exception:
+        pass # Rinda ko Streamlit icika niba port iri occupied
+
+if "flask_started" not in __streamlit__.session_state:
+    __streamlit__.session_state.flask_started = True
+    threading.Thread(target=run_flask, daemon=True).start()
+
+# --- CHAT INPUT & HANDLER ---
+if "messages" not in __streamlit__.session_state:
+    __streamlit__.session_state.messages = [{"role": "system", "content": SYSTEM_PROMPT}]
+
+for message in __streamlit__.session_state.messages:
+    if message["role"] != "system":
+        with __streamlit__.chat_message(message["role"]):
+            __streamlit__.markdown(message["content"])
+
 if ikibazo := __streamlit__.chat_input("Type here...."):
     __streamlit__.session_state.messages.append({"role": "user", "content": ikibazo})
     
-    # Tubakire amashusho nk'inyandiko gusa kuko Mixtral itagira Vision:
-    api_messages = [{"role": "system", "content": SYSTEM_PROMPT}]
-    for msg in __streamlit__.session_state.messages:
-        if msg["role"] != "system":
-            # Gukuramo ibintu byose bishyira amashusho muri API call
-            if isinstance(msg["content"], list):
-                text_only = ""
-                for item in msg["content"]:
-                    if isinstance(item, dict) and item.get("type") == "text":
-                        text_only += item.get("text", "")
-                api_messages.append({"role": msg["role"], "content": text_only})
-            else:
-                api_messages.append({"role": msg["role"], "content": str(msg["content"])})
-
+    with __streamlit__.chat_message("user"):
+        __streamlit__.markdown(ikibazo)
+        
     try:
         with __streamlit__.spinner("GKevin is thinking....."):
             completion = client.chat.completions.create(
                 model=MODEL_NAME,
-                messages=api_messages,
+                messages=__streamlit__.session_state.messages,
                 temperature=0.5,
                 top_p=0.9,
                 max_tokens=1024
             )
             
             igisubizo_cya_ai = completion.choices[0].message.content
+            
+            if "</think>" in igisubizo_cya_ai:
+                igisubizo_cya_ai = igisubizo_cya_ai.split("</think>")[-1].strip()
+            igisubizo_cya_ai = igisubizo_cya_ai.replace("<think>", "").replace("</think>", "").strip()
+            
             __streamlit__.session_state.messages.append({"role": "assistant", "content": igisubizo_cya_ai})
             __streamlit__.rerun()
             
     except Exception as e:
-        __streamlit__.error(f"Error detected !: {e}")
+        __streamlit__.error(f"Error detected: {e}")
