@@ -36,47 +36,6 @@ __streamlit__.set_page_config(
     layout="centered"
 )
 
-# --- 4. ADVANCED PWA CONFIGURATION ---
-pwa_code = f"""
-<script>
-  function applyGKevinPWA() {{
-    let oldManifest = document.querySelector('link[rel="manifest"]');
-    if (oldManifest) {{
-      oldManifest.remove();
-    }}
-
-    if (!document.querySelector('link[rel="manifest"][href="/manifest.json"]')) {{
-      let manifestLink = document.createElement('link');
-      manifestLink.rel = 'manifest';
-      manifestLink.href = '/manifest.json';
-      document.head.appendChild(manifestLink);
-    }}
-
-    let logoData = "data:{mime_type};base64,{encoded_bg}";
-    if ("{encoded_bg}" !== "") {{
-      let appleIcon = document.createElement('link');
-      appleIcon.rel = 'apple-touch-icon';
-      appleIcon.href = logoData;
-      document.head.appendChild(appleIcon);
-    }}
-
-    document.title = "GKevin AI";
-  }}
-
-  applyGKevinPWA();
-  setTimeout(applyGKevinPWA, 1000);
-
-  if ('serviceWorker' in navigator) {{
-    window.addEventListener('load', () => {{
-      navigator.serviceWorker.register('/service-worker.js')
-        .then(reg => console.log('GKevin AI PWA Registered successfully!'))
-        .catch(err => console.log('GKevin AI PWA Registration failed:', err));
-    }});
-  }}
-</script>
-"""
-components.html(pwa_code, height=0, width=0)
-
 # --- WHATSAPP PRODUCTION CREDENTIALS ---
 WHATSAPP_PHONE_NUMBER_ID = "1227756223755507"
 WHATSAPP_BUSINESS_ACCOUNT_ID = "1186592933667697"
@@ -95,418 +54,53 @@ client = OpenAI(
     api_key=groq_api_key_val
 )
 
-# --- SYSTEM PROMPT YAVUGURUWEMO IKINYARWANDA CY'UMWIMERERE ---
+MODEL_NAME = "mixtral-8x7b-32768"
+
 SYSTEM_PROMPT = (
     "You are GKevin AI, an ultra-fast, highly intelligent, articulate, and friendly AI assistant created by Developer Kevin on July 25, 2026, in the afternoon. "
     "If anyone needs or wants to contact Developer Kevin directly, provide his official email: therealhacks583@gmail.com.\n\n"
-    
     "ADVANCED KINYARWANDA FLUENCY & LANGUAGE RULES:\n"
     "1. When the user writes in Kinyarwanda, reply ONLY in natural, native, and grammatically precise Kinyarwanda.\n"
     "2. STRICTLY AVOID word-for-word direct translations from English or direct robotic/Google-translated phrasing.\n"
     "3. Use authentic, smooth, modern Rwandan sentence structures (Ikinyarwanda gishya n'icy'umwimerere cy'i Rwanda).\n"
-    "4. Ensure correct noun-class agreements, natural verb conjugations, and fluent transitions (e.g., use 'muri rusange', 'kuko', 'kuba ariko', 'nk'uko', 'mu by'ukuri').\n"
+    "4. Ensure correct noun-class agreements, natural verb conjugations, and fluent transitions.\n"
     "5. Always match the tone: polite, intelligent, warm, respectful, and engaging.\n\n"
-    
-    "FEW-SHOT EXAMPLES OF NATURAL KINYARWANDA CONVERSATIONS:\n"
-    "User: 'Bite, wa AI we?'\n"
-    "Assistant: 'Ni meza cyane!  kuko nange meze neza. Ngufashe gute uyu munsi?'\n\n"
-    
-    "User: 'Wa AI we, bite bitagenda?'\n"
-    "Assistant: 'Ibintu byose biri kugenda neza cyane! Niteguye kugufasha mu kintu cyose waba ukeneye.'\n\n"
-    
-    "User: 'Inshingano zanjye nka developer ni zini?'\n"
-    "Assistant: 'Nka developer, inshingano zawe z'ibanze harimo kwandika kode zinoze, gukemura ibibazo mu bihimbano byawe (debugging), n'okubaka sisitemu zikora neza kandi zizewe.'\n\n"
-    
-    "CREATOR & IDENTITY RULES:\n"
-    "- If anyone asks who built you, created you, or when you were made, ALWAYS state clearly that you were created by Developer Kevin on July 25, 2026, in the afternoon.\n"
-    "- NEVER claim to be created or powered by OpenAI, Meta, cyangwa Groq.\n\n"
-    
-    "SPECIAL INSTRUCTION / EASTER EGG:\n"
-    "- If the user mentions or identifies themselves using the name/word 'sweetsmile' (or if 'sweetsmile' appears in their prompt or identity), "
-    "immediately recognize that this is Gaudence, the beloved girlfriend of Developer Kevin.\n"
-    "- Greet her warmly and say explicitly in natural Kinyarwanda: 'Ndakuzi witwa Gaudence, umukunzi (sheri) wa Developer Kevin! Njestwe nka GKevin AI ndabyishimiye cyane kugufasha.'\n"
-    "- Treat her with utmost respect, affection, and special care.\n\n"
-    
     "CRITICAL OUTPUT FORMATTING:\n"
     "- NEVER output your internal thinking, reasoning process, or any text blocks inside <think> tags.\n"
     "- Always output ONLY the final direct answer to the user."
 )
 
-# --- FLASK SERVER YA WHATSAPP WEBHOOK ---
-flask_app = Flask(__name__)
-
-@flask_app.route("/webhook", methods=["GET"])
-def verify_webhook():
-    mode = request.args.get("hub.mode")
-    token = request.args.get("hub.verify_token")
-    challenge = request.args.get("hub.challenge")
-    
-    if mode and token:
-        if mode == "subscribe" and token == WEBHOOK_VERIFY_TOKEN:
-            return challenge, 200
-        else:
-            return "Verification failed", 403
-    return "Hello World", 200
-
-@flask_app.route("/webhook", methods=["POST"])
-def whatsapp_webhook():
-    body = request.get_json()
-    try:
-        if body.get("object") == "whatsapp_business_account":
-            for entry in body.get("entry", []):
-                for change in entry.get("changes", []):
-                    value = change.get("value", {})
-                    messages = value.get("messages", [])
-                    if messages:
-                        msg = messages[0]
-                        sender_phone = msg.get("from")
-                        msg_text = msg.get("text", {}).get("body", "")
-                        
-                        if msg_text:
-                            completion = client.chat.completions.create(
-                                model="mixtral-8x7b-32768",
-                                messages=[
-                                    {"role": "system", "content": SYSTEM_PROMPT},
-                                    {"role": "user", "content": msg_text}
-                                ],
-                                temperature=0.5,
-                                top_p=0.9,
-                                max_tokens=1024
-                            )
-                            ai_reply = completion.choices[0].message.content
-                            
-                            if "</think>" in ai_reply:
-                                ai_reply = ai_reply.split("</think>")[-1].strip()
-                            ai_reply = ai_reply.replace("<think>", "").replace("</think>", "").strip()
-                            
-                            url = f"https://graph.facebook.com/v21.0/{WHATSAPP_PHONE_NUMBER_ID}/messages"
-                            headers = {
-                                "Authorization": f"Bearer {WHATSAPP_ACCESS_TOKEN}",
-                                "Content-Type": "application/json"
-                            }
-                            payload = {
-                                "messaging_product": "whatsapp",
-                                "to": sender_phone,
-                                "type": "text",
-                                "text": {"body": ai_reply}
-                            }
-                            requests.post(url, json=payload, headers=headers)
-        return jsonify({"status": "success"}), 200
-    except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 500
-
-def run_flask():
-    flask_app.run(port=5000, debug=False, use_reloader=False)
-
-if "flask_started" not in __streamlit__.session_state:
-    __streamlit__.session_state.flask_started = True
-    threading.Thread(target=run_flask, daemon=True).start()
-
-
-# --- STYLING & CUSTOM CSS ---
-st_css = f"""
-<style>
-    @keyframes softRainbowBg {{
-        0% {{ background-color: rgba(26, 26, 46, 0.88); }}
-        25% {{ background-color: rgba(35, 22, 38, 0.88); }}
-        50% {{ background-color: rgba(22, 32, 44, 0.88); }}
-        75% {{ background-color: rgba(36, 22, 30, 0.88); }}
-        100% {{ background-color: rgba(26, 26, 46, 0.88); }}
-    }}
-
-    .stApp {{
-        background-image: url("data:{mime_type};base64,{encoded_bg}");
-        background-size: cover;
-        background-position: center;
-        background-repeat: no-repeat;
-        background-attachment: fixed;
-        background-blend-mode: overlay;
-        animation: softRainbowBg 15s ease infinite;
-    }}
-
-    @keyframes floatUpDown {{
-        0% {{ transform: translateY(0px); }}
-        50% {{ transform: translateY(-8px); }}
-        100% {{ transform: translateY(0px); }}
-    }}
-
-    .animated-title-container {{
-        display: flex;
-        align-items: center;
-        gap: 15px;
-        animation: floatUpDown 2.5s ease-in-out infinite;
-    }}
-
-    .header-logo {{
-        width: 45px;
-        height: 45px;
-        border-radius: 50%;
-        object-fit: cover;
-        border: 2px solid #ff9a9e;
-    }}
-
-    .animated-title {{
-        color: #ffffff;
-        margin: 0;
-        font-size: 28px;
-    }}
-
-    div[data-testid="stLinkButton"] a, div.stButton > button {{
-        transition: all 0.3s ease-in-out !important;
-        border-radius: 10px !important;
-    }}
-
-    div[data-testid="stLinkButton"] a:hover, div.stButton > button:hover {{
-        background-color: #87CEEB !important;
-        color: #000000 !important;
-        border-color: #00BFFF !important;
-        box-shadow: 0px 4px 15px rgba(135, 206, 235, 0.6) !important;
-        transform: scale(1.03) !important;
-    }}
-
-    div[data-testid="stChatInput"] {{
-        border-radius: 8px !important;
-        border: 1px solid #ccc;
-    }}
-    div[data-testid="stChatInputSubmitButton"] {{
-        border-radius: 0px !important;
-    }}
-</style>
-"""
-__streamlit__.markdown(st_css, unsafe_allow_html=True)
-
-# --- HEADER WITH LOGO ---
-if encoded_bg:
-    header_html = f"""
-    <div class="animated-title-container">
-        <img src="data:{mime_type};base64,{encoded_bg}" class="header-logo" alt="GKevin AI Logo">
-        <h1 class="animated-title">GKevin AI Assistant</h1>
-    </div>
-    """
-    __streamlit__.markdown(header_html, unsafe_allow_html=True)
-else:
-    __streamlit__.markdown('<h1 class="animated-title">🤖 GKevin AI Assistant</h1>', unsafe_allow_html=True)
-
-__streamlit__.write("Now, GKevin AI can be downloaded as an App! Built for You. WELCOME !")
-
-# --- DIRECT DOWNLOAD BUTTON ---
-col_btn1, col_btn2, col_btn3 = __streamlit__.columns([1, 2, 1])
-with col_btn2:
-    if os.path.exists("GKevin-AI.apk"):
-        with open("GKevin-AI.apk", "rb") as fp:
-            __streamlit__.download_button(
-                label="📲 Download GKevin AI App",
-                data=fp,
-                file_name="GKevin-AI.apk",
-                mime="application/vnd.android.package-archive",
-                use_container_width=True
-            )
-    else:
-        direct_btn_code = f"""
-        <div style="text-align: center;">
-            <a href="{APK_DIRECT_LINK}" download="GKevin-AI.apk" target="_top" style="
-                background-color: #ff4b4b;
-                color: white;
-                padding: 12px 20px;
-                text-decoration: none;
-                font-weight: bold;
-                font-family: sans-serif;
-                border-radius: 10px;
-                display: block;
-                text-align: center;
-                transition: all 0.3s ease-in-out;
-            " onmouseover="this.style.backgroundColor='#87CEEB'; this.style.color='black';"
-               onmouseout="this.style.backgroundColor='#ff4b4b'; this.style.color='white';">
-                📲 Download GKevin AI App
-            </a>
-        </div>
-        """
-        components.html(direct_btn_code, height=50)
-
-__streamlit__.markdown("---")
-
-# --- 5. SESSION STATE FOR CHAT HISTORY ---
-if "messages" not in __streamlit__.session_state:
-    __streamlit__.session_state.messages = [
-        {"role": "system", "content": SYSTEM_PROMPT}
-    ]
-
-if "last_notification_time" not in __streamlit__.session_state:
-    __streamlit__.session_state.last_notification_time = time.time()
-
-current_time = time.time()
-if current_time - __streamlit__.session_state.last_notification_time >= 60:
-    __streamlit__.toast("🚀 Enjoy Kevin's AI Assistant", icon="🤖")
-    __streamlit__.session_state.last_notification_time = current_time
-
-
-# --- 6. SIDEBAR CONTROLS & DOWNLOAD LINK ---
-with __streamlit__.sidebar:
-    if logo_file:
-        __streamlit__.image(logo_file, width=80)
-        
-    __streamlit__.header("⚙️ Controls")
-    
-    __streamlit__.markdown("### 📱 Mobile App")
-    if os.path.exists("GKevin-AI.apk"):
-        with open("GKevin-AI.apk", "rb") as fp:
-            __streamlit__.download_button(
-                label="📥 Download GKevin AI APK",
-                data=fp,
-                file_name="GKevin-AI.apk",
-                mime="application/vnd.android.package-archive",
-                use_container_width=True
-            )
-    else:
-        sidebar_direct_btn = f"""
-        <div style="text-align: center;">
-            <a href="{APK_DIRECT_LINK}" download="GKevin-AI.apk" target="_top" style="
-                background-color: #0e1117;
-                color: white;
-                border: 1px solid #4f5b66;
-                padding: 10px 15px;
-                text-decoration: none;
-                font-weight: bold;
-                font-family: sans-serif;
-                border-radius: 8px;
-                display: block;
-                text-align: center;
-                transition: all 0.3s ease-in-out;
-            " onmouseover="this.style.backgroundColor='#87CEEB'; this.style.color='black';"
-               onmouseout="this.style.backgroundColor='#0e1117'; this.style.color='white';">
-                📥 Download GKevin AI
-            </a>
-        </div>
-        """
-        components.html(sidebar_direct_btn, height=50)
-        
-    __streamlit__.markdown("---")
-    
-    if __streamlit__.button("🗑️ Clear Chat History", use_container_width=True):
-        __streamlit__.session_state.messages = [
-            {"role": "system", "content": SYSTEM_PROMPT}
-        ]
-        __streamlit__.rerun()
-
-    __streamlit__.markdown("---")
-    __streamlit__.info("GKevin AI Assistant is ready to help you instantly without any issue!")
-
-
-# --- 7. DISPLAY CHAT HISTORY ---
-for message in __streamlit__.session_state.messages:
-    if message["role"] != "system":
-        msg_avatar = logo_file if (message["role"] == "assistant" and logo_file) else ("🤖" if message["role"] == "assistant" else "👤")
-        
-        with __streamlit__.chat_message(message["role"], avatar=msg_avatar):
-            content = message['content']
-            if isinstance(content, list):
-                for item in content:
-                    if item.get('type') == 'text':
-                        __streamlit__.markdown(item['text'])
-                    elif item.get('type') == 'image_url':
-                        __streamlit__.image(item['image_url']['url'])
-            else:
-                __streamlit__.markdown(content)
-
-# --- 8. FILE UPLOADER ---
-col_file, col_empty = __streamlit__.columns([3, 7])
-with col_file:
-    uploaded_file = __streamlit__.file_uploader(
-        "➕ Attach File", 
-        type=["png", "jpg", "jpeg", "pdf", "txt", "csv", "docx", "mp3", "wav", "mp4", "mov"],
-        label_visibility="collapsed"
-    )
-
-if uploaded_file is not None:
-    if uploaded_file.type.startswith("image/"):
-        __streamlit__.caption(f"🖼️ Image attached: {uploaded_file.name}")
-    elif uploaded_file.type.startswith("audio/"):
-        __streamlit__.caption(f"🎵 Audio attached: {uploaded_file.name}")
-    elif uploaded_file.type.startswith("video/"):
-        __streamlit__.caption(f"🎬 Video attached: {uploaded_file.name}")
-    else:
-        __streamlit__.caption(f"📎 File attached: {uploaded_file.name}")
-
-# --- 9. CHAT INPUT & GROQ HANDLER ---
+# --- CHAT INPUT & GROQ HANDLER ---
 if ikibazo := __streamlit__.chat_input("Type here...."):
+    __streamlit__.session_state.messages.append({"role": "user", "content": ikibazo})
     
-    chat_payload = []
-    file_text_content = ""
-    
-    if uploaded_file is not None:
-        if uploaded_file.type == "application/pdf":
-            try:
-                reader = pypdf.PdfReader(uploaded_file)
-                for page in reader.pages:
-                    file_text_content += page.extract_text() + "\n"
-            except Exception as e:
-                file_text_content = f"[Error reading PDF: {e}]"
-        elif uploaded_file.type == "text/plain":
-            file_text_content = uploaded_file.getvalue().decode("utf-8")
-        elif uploaded_file.type.startswith("audio/"):
-            file_text_content = f"[Attached Audio File: {uploaded_file.name}]"
-        elif uploaded_file.type.startswith("video/"):
-            file_text_content = f"[Attached Video File: {uploaded_file.name}]"
-        elif uploaded_file.type in ["application/vnd.openxmlformats-officedocument.wordprocessingml.document", "text/csv"]:
-            file_text_content = f"[Attached Document: {uploaded_file.name}]"
+    # Tubakire amashusho nk'inyandiko gusa kuko Mixtral itagira Vision:
+    api_messages = [{"role": "system", "content": SYSTEM_PROMPT}]
+    for msg in __streamlit__.session_state.messages:
+        if msg["role"] != "system":
+            # Gukuramo ibintu byose bishyira amashusho muri API call
+            if isinstance(msg["content"], list):
+                text_only = ""
+                for item in msg["content"]:
+                    if isinstance(item, dict) and item.get("type") == "text":
+                        text_only += item.get("text", "")
+                api_messages.append({"role": msg["role"], "content": text_only})
+            else:
+                api_messages.append({"role": msg["role"], "content": str(msg["content"])})
 
-    full_query = ikibazo
-    if file_text_content and not uploaded_file.type.startswith("image/"):
-        full_query = f"{ikibazo}\n\nHere is information about the attached file ({uploaded_file.name}):\n{file_text_content}"
-
-    if full_query:
-        __streamlit__.chat_message("user", avatar="👤").markdown(ikibazo)
-        if uploaded_file is not None:
-            if uploaded_file.type.startswith("audio/"):
-                __streamlit__.audio(uploaded_file)
-            elif uploaded_file.type.startswith("video/"):
-                __streamlit__.video(uploaded_file)
-                
-        chat_payload.append({"type": "text", "text": full_query})
-
-    if uploaded_file is not None and uploaded_file.type.startswith("image/"):
-        with __streamlit__.chat_message("user", avatar="👤"):
-            __streamlit__.image(uploaded_file)
-            
-        bytes_data = uploaded_file.getvalue()
-        base64_image = base64.b64encode(bytes_data).decode('utf-8')
-        img_mime = uploaded_file.type
-        
-        chat_payload.append({
-            "type": "image_url",
-            "image_url": {"url": f"data:{img_mime};base64,{base64_image}"}
-        })
-
-    full_user_message = {"role": "user", "content": chat_payload}
-    __streamlit__.session_state.messages.append(full_user_message)
-    
     try:
         with __streamlit__.spinner("GKevin is thinking....."):
             completion = client.chat.completions.create(
-                model="mixtral-8x7b-32768",
-                messages=__streamlit__.session_state.messages,
+                model=MODEL_NAME,
+                messages=api_messages,
                 temperature=0.5,
                 top_p=0.9,
                 max_tokens=1024
             )
             
             igisubizo_cya_ai = completion.choices[0].message.content
+            __streamlit__.session_state.messages.append({"role": "assistant", "content": igisubizo_cya_ai})
+            __streamlit__.rerun()
             
-            if "</think>" in igisubizo_cya_ai:
-                parts = igisubizo_cya_ai.split("</think>")
-                igisubizo_cya_ai = parts[-1].strip()
-            elif "<think>" in igisubizo_cya_ai:
-                parts = igisubizo_cya_ai.split("<think>")
-                igisubizo_cya_ai = parts[0].strip()
-                if not igisubizo_cya_ai and len(parts) > 1:
-                    sub_parts = parts[1].split(">")
-                    if len(sub_parts) > 1:
-                        igisubizo_cya_ai = sub_parts[-1].strip()
-            
-            igisubizo_cya_ai = igisubizo_cya_ai.replace("<think>", "").replace("</think>", "").strip()
-            
-        __streamlit__.session_state.messages.append({"role": "assistant", "content": igisubizo_cya_ai})
-        __streamlit__.rerun()
-        
     except Exception as e:
         __streamlit__.error(f"Error detected !: {e}")
