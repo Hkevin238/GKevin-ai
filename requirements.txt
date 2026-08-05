@@ -1,13 +1,2 @@
-openai
-streamlit
-streamlit
-openai
-pillow
-pypdf
-supabase
-streamlit
-openai
-pillow
-pypdf
-flask
-requests
+streamlit>=1.30.0
+groq>=0.4.0
