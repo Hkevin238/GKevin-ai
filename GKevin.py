@@ -81,10 +81,10 @@ pwa_code = f"""
 components.html(pwa_code, height=0, width=0)
 
 # --- HUZA NA GROQ API ---
-try:
-    groq_api_key_val = __streamlit__.secrets["GROQ_API_KEY"]
-except Exception:
-    groq_api_key_val = "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"
+groq_api_key_val = __streamlit__.secrets.get("GROQ_API_KEY", "")
+
+if not groq_api_key_val:
+    __streamlit__.error("⚠️ GROQ_API_KEY ntabwo iboneka mu zibitswe (Secrets)! Ndayisaba kuyishyiramo.")
 
 client = OpenAI(
     base_url="https://api.groq.com/openai/v1",
@@ -248,7 +248,7 @@ col_file, col_empty = __streamlit__.columns([3, 7])
 with col_file:
     uploaded_file = __streamlit__.file_uploader(
         "➕ Attach File", 
-        type=["png", "jpg", "jpeg", "pdf", "txt", "csv", "docx", "mp3", "wav", "mp4", "mov"],
+        type=["png", "jpg", "jpeg", "pdf", "txt", "csv", "docx"],
         label_visibility="collapsed"
     )
 
@@ -265,11 +265,13 @@ if ikibazo := __streamlit__.chat_input("Type here...."):
             try:
                 reader = pypdf.PdfReader(uploaded_file)
                 for page in reader.pages:
-                    file_text_content += page.extract_text() + "\n"
+                    extracted = page.extract_text()
+                    if extracted:
+                        file_text_content += extracted + "\n"
             except Exception as e:
                 file_text_content = f"[Error reading PDF: {e}]"
-        elif uploaded_file.type == "text/plain":
-            file_text_content = uploaded_file.getvalue().decode("utf-8")
+        elif uploaded_file.type in ["text/plain", "text/csv"]:
+            file_text_content = uploaded_file.getvalue().decode("utf-8", errors="ignore")
         else:
             file_text_content = f"[Attached File: {uploaded_file.name}]"
 
@@ -279,13 +281,8 @@ if ikibazo := __streamlit__.chat_input("Type here...."):
 
     with __streamlit__.chat_message("user", avatar="👤"):
         __streamlit__.markdown(ikibazo)
-        if uploaded_file is not None:
-            if uploaded_file.type.startswith("image/"):
-                __streamlit__.image(uploaded_file)
-            elif uploaded_file.type.startswith("audio/"):
-                __streamlit__.audio(uploaded_file)
-            elif uploaded_file.type.startswith("video/"):
-                __streamlit__.video(uploaded_file)
+        if uploaded_file is not None and uploaded_file.type.startswith("image/"):
+            __streamlit__.image(uploaded_file)
 
     __streamlit__.session_state.messages.append({"role": "user", "content": full_query})
     
