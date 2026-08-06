@@ -97,22 +97,23 @@ if prompt := st.chat_input("Ask here GKevin AI ..."):
     # Ukoresheje avatar="kvn.png" hano kuri response nshya ya AI
     with st.chat_message("assistant", avatar="kvn.png"):
         message_placeholder = st.empty()
+        # Garagaza inyandiko yo gutekereza mbere y'uko amagambo atangira kuza
+        message_placeholder.markdown("*GKevin AI thinking........*")
         
         try:
-            # Garagaza ubundi buhamya ngo ikirimo gutekereza (loading spinner)
-            with st.spinner("GKevin AI thinking........"):
-                completion = client.chat.completions.create(
-                    model="llama-3.3-70b-versatile",
-                    messages=st.session_state.messages,
-                    temperature=0.7,
-                    max_tokens=1024,
-                    stream=True
-                )
+            completion = client.chat.completions.create(
+                model="llama-3.3-70b-versatile",
+                messages=st.session_state.messages,
+                temperature=0.7,
+                max_tokens=1024,
+                stream=True
+            )
             
             full_response = ""
             for chunk in completion:
                 chunk_content = chunk.choices[0].delta.content or ""
                 full_response += chunk_content
+                # Mu gihe inyandiko itaraza neza, ihita isimbura ya "thinking..."
                 message_placeholder.markdown(full_response + "▌")
             
             message_placeholder.markdown(full_response)
