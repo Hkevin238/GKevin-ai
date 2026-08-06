@@ -2,20 +2,41 @@ import os
 import streamlit as st
 from groq import Groq
 
-# Page Setup
+# 1. Page Setup
 st.set_page_config(
     page_title="GKevin AI",
     page_icon="kvn.png",
     layout="centered"
 )
 
+# 2. Gushyiraho Custom CSS yo guhindura Background (ai.png)
+background_style = """
+<style>
+.stApp {
+    background-image: url("ai.png");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+}
+
+/* Kuri chat bubbles n'inyandiko ngo bigaragare neza no ku background */
+.stChatMessage {
+    background-color: rgba(255, 255, 255, 0.85);
+    border-radius: 10px;
+    padding: 10px;
+    margin-bottom: 10px;
+}
+</style>
+"""
+st.markdown(background_style, unsafe_allow_html=True)
+
 st.title("🤖 GKevin AI Assistant")
 st.caption("GKevin , Fastest AI during responsing")
 
-# 1. Gufata API Key muri Streamlit Secrets cyangwa Environment Variables
+# 3. Gufata API Key muri Streamlit Secrets cyangwa Environment Variables
 api_key = st.secrets.get("GROQ_API_KEY") or os.getenv("GROQ_API_KEY")
 
-# Niba API Key itaraboneka muri configuration, bera umukoresha icyapa
 if not api_key:
     st.error("⚠️ API Key ntiyabonywe!")
     st.info("Nyamuneka genda muri Streamlit Cloud > Settings > Secrets uzimose:\nGROQ_API_KEY = \"gsk_...\"")
@@ -28,7 +49,7 @@ except Exception as e:
     st.error(f"Ikibazo mu guhuza na Groq: {e}")
     st.stop()
 
-# 2. Kubika no gushinga Chat History
+# 4. Kubika no gushinga Chat History
 if "messages" not in st.session_state:
     st.session_state.messages = [
         {
@@ -48,14 +69,12 @@ for message in st.session_state.messages:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
 
-# 3. Kwakira ubutumwa n'Igisubizo (Streaming)
+# 5. Kwakira ubutumwa n'Igisubizo (Streaming)
 if prompt := st.chat_input("Ask here GKevin AI ..."):
-    # Bika no kwerekana ubutumwa bw'umukoresha
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
 
-    # Kwakira n'igukora igisubizo cy'AI
     with st.chat_message("assistant"):
         message_placeholder = st.empty()
         
