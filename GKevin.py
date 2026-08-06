@@ -55,7 +55,7 @@ api_key = st.secrets.get("GROQ_API_KEY") or os.getenv("GROQ_API_KEY")
 
 if not api_key:
     st.error("⚠️ API Key ntiyabonywe!")
-    st.info("Nyamuneka genda muri Streamlit Cloud > Settings > Settings > Secrets uzimose:\nGROQ_API_KEY = \"gsk_...\"")
+    st.info("Nyamuneka genda muri Streamlit Cloud > Settings > Secrets uzimose:\nGROQ_API_KEY = \"gsk_...\"")
     st.stop()
 
 # Initialize Groq Client
@@ -81,10 +81,11 @@ if "messages" not in st.session_state:
         }
     ]
 
-# Display history (ureke system message yo ku ruhande)
+# Display history (ikoresha kvn.png ku bisubizo bya assistant)
 for message in st.session_state.messages:
     if message["role"] != "system":
-        with st.chat_message(message["role"]):
+        avatar = "kvn.png" if message["role"] == "assistant" else None
+        with st.chat_message(message["role"], avatar=avatar):
             st.markdown(message["content"])
 
 # 5. Kwakira ubutumwa n'Igisubizo (Streaming)
@@ -93,7 +94,8 @@ if prompt := st.chat_input("Ask here GKevin AI ..."):
     with st.chat_message("user"):
         st.markdown(prompt)
 
-    with st.chat_message("assistant"):
+    # Ukoresheje avatar="kvn.png" hano kuri response nshya ya AI
+    with st.chat_message("assistant", avatar="kvn.png"):
         message_placeholder = st.empty()
         
         try:
