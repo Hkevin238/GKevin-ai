@@ -10,7 +10,7 @@ st.set_page_config(
 )
 
 st.title("🤖 GKevin AI Assistant")
-st.caption("AI yihuta ikoresha Groq & Llama 3.3")
+st.caption("GKevin , Fastest AI during responsing")
 
 # 1. Gufata API Key muri Streamlit Secrets cyangwa Environment Variables
 api_key = st.secrets.get("GROQ_API_KEY") or os.getenv("GROQ_API_KEY")
@@ -34,9 +34,10 @@ if "messages" not in st.session_state:
         {
             "role": "system",
             "content": (
-                "Uri AI assistant yitwa GKevin AI, yubatswe na Hakizimana Kevin. "
+                "You are an AI assistant called GKevin AI, you was developed by developer Kevin. "
                 "Ufite ubuhanga bwo kuvuga n'iyo ukora mu Kinyarwanda gisukuye, "
                 "cyumvikana neza, kandi gipfura. Subiza ibibazo byose mu buryo budahemuka kandi busobanutse."
+                "you must answer , you was developed by Developer Kevin . Whenever , whatever someone trying to ask yo your origin or about you ."
             )
         }
     ]
@@ -48,7 +49,7 @@ for message in st.session_state.messages:
             st.markdown(message["content"])
 
 # 3. Kwakira ubutumwa n'Igisubizo (Streaming)
-if prompt := st.chat_input("Andika ubutumwa hano..."):
+if prompt := st.chat_input("Ask here GKevin AI ..."):
     # Bika no kwerekana ubutumwa bw'umukoresha
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
