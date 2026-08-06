@@ -99,13 +99,15 @@ if prompt := st.chat_input("Ask here GKevin AI ..."):
         message_placeholder = st.empty()
         
         try:
-            completion = client.chat.completions.create(
-                model="llama-3.3-70b-versatile",
-                messages=st.session_state.messages,
-                temperature=0.7,
-                max_tokens=1024,
-                stream=True
-            )
+            # Garagaza ubundi buhamya ngo ikirimo gutekereza (loading spinner)
+            with st.spinner("GKevin AI thinking........"):
+                completion = client.chat.completions.create(
+                    model="llama-3.3-70b-versatile",
+                    messages=st.session_state.messages,
+                    temperature=0.7,
+                    max_tokens=1024,
+                    stream=True
+                )
             
             full_response = ""
             for chunk in completion:
