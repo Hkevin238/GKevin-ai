@@ -4,8 +4,8 @@ from groq import Groq
 
 # Page Setup
 st.set_page_config(
-    page_title="GKevin AI Chat",
-    page_icon="🤖",
+    page_title="GKevin AI",
+    page_icon="kvn.png",
     layout="centered"
 )
 
