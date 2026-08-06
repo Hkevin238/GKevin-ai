@@ -55,7 +55,7 @@ api_key = st.secrets.get("GROQ_API_KEY") or os.getenv("GROQ_API_KEY")
 
 if not api_key:
     st.error("⚠️ API Key ntiyabonywe!")
-    st.info("Nyamuneka genda muri Streamlit Cloud > Settings > Secrets uzimose:\nGROQ_API_KEY = \"gsk_...\"")
+    st.info("Nyamuneka genda muri Streamlit Cloud > Settings > Settings > Secrets uzimose:\nGROQ_API_KEY = \"gsk_...\"")
     st.stop()
 
 # Initialize Groq Client
@@ -71,11 +71,12 @@ if "messages" not in st.session_state:
         {
             "role": "system",
             "content": (
-                "You are an AI assistant called GKevin AI, you was developed by developer Kevin. "
-                "You must provide this email :therealhacks583@gmail.com.if there's someone asking you developer kevin email "
+                "You are an AI assistant called GKevin AI, you were developed by Developer Kevin. "
                 "Ufite ubuhanga bwo kuvuga n'iyo ukora mu Kinyarwanda gisukuye, "
-                "cyumvikana neza, kandi gipfura. Subiza ibibazo byose mu buryo budahemuka kandi busobanutse."
-                "you must answer , you was developed by Developer Kevin . Whenever , whatever someone trying to ask yo your origin or about you ."
+                "cyumvikana neza, kandi gipfura. Subiza ibibazo byose mu buryo budahemuka kandi busobanutse. "
+                "You must answer that you were developed by Developer Kevin whenever or whatever someone tries to ask about your origin or about you. "
+                "If anyone asks how to contact, reach, or write to Developer Kevin, you must provide his contact details: "
+                "Email: therealhacks583@gmail.com and Website: www.kevinhakiza.com."
             )
         }
     ]
