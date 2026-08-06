@@ -1,3 +1,4 @@
+import base64
 import os
 import streamlit as st
 from groq import Groq
@@ -9,27 +10,42 @@ st.set_page_config(
     layout="centered"
 )
 
-# 2. Gushyiraho Custom CSS yo guhindura Background (ai.png)
-background_style = """
-<style>
-.stApp {
-    background-image: url("ai.png");
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    background-attachment: fixed;
-}
+# Function yo guhindura local image muri Base64 format
+def get_base64_of_bin_file(bin_file):
+    with open(bin_file, 'rb') as f:
+        data = f.read()
+    return base64.b64encode(data).decode()
 
-/* Kuri chat bubbles n'inyandiko ngo bigaragare neza no ku background */
-.stChatMessage {
-    background-color: rgba(255, 255, 255, 0.85);
-    border-radius: 10px;
-    padding: 10px;
-    margin-bottom: 10px;
-}
-</style>
-"""
-st.markdown(background_style, unsafe_allow_html=True)
+# 2. Gushyiraho Custom CSS yo guhindura Background (ai.png)
+def set_bg_hack(main_bg):
+    main_bg_ext = "png"
+    
+    # Niba ifoto ya ai.png ihari ku disk, irasomwa neza
+    if os.path.exists(main_bg):
+        bin_str = get_base64_of_bin_file(main_bg)
+        bg_css = f"""
+        <style>
+        .stApp {{
+            background-image: url("data:image/{main_bg_ext};base64,{bin_str}");
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+        }}
+        
+        /* Kuri chat bubbles n'inyandiko ngo bigaragare neza no ku background */
+        .stChatMessage {{
+            background-color: rgba(255, 255, 255, 0.85);
+            border-radius: 10px;
+            padding: 10px;
+            margin-bottom: 10px;
+        }}
+        </style>
+        """
+        st.markdown(bg_css, unsafe_allow_html=True)
+
+# Gushyiraho background ikoresheje ai.png
+set_bg_hack('ai.png')
 
 st.title("🤖 GKevin AI Assistant")
 st.caption("GKevin , Fastest AI during responsing")
