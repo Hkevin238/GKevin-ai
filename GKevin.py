@@ -16,39 +16,76 @@ def get_base64_of_bin_file(bin_file):
         data = f.read()
     return base64.b64encode(data).decode()
 
-# 2. Gushyiraho Custom CSS yo guhindura Background (ai.png)
-def set_bg_hack(main_bg):
-    main_bg_ext = "png"
-    
-    # Niba ifoto ya ai.png ihari ku disk, irasomwa neza
+# 2. Gushyiraho Custom CSS (Background & UI y'ubutumwa: User -> Right, AI -> Left)
+def set_custom_styles(main_bg):
+    bg_style = ""
     if os.path.exists(main_bg):
         bin_str = get_base64_of_bin_file(main_bg)
-        bg_css = f"""
-        <style>
-        .stApp {{
-            background-image: url("data:image/{main_bg_ext};base64,{bin_str}");
+        bg_style = f"""
+            background-image: url("data:image/png;base64,{bin_str}");
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
             background-attachment: fixed;
-        }}
-        
-        /* Kuri chat bubbles n'inyandiko ngo bigaragare neza no ku background */
-        .stChatMessage {{
-            background-color: rgba(255, 255, 255, 0.85);
-            border-radius: 10px;
-            padding: 10px;
-            margin-bottom: 10px;
-        }}
-        </style>
         """
-        st.markdown(bg_css, unsafe_allow_html=True)
 
-# Gushyiraho background ikoresheje ai.png
-set_bg_hack('ai.png')
+    css = f"""
+    <style>
+    .stApp {{
+        {bg_style}
+    }}
+
+    /* Container yo gutunganya ubutumwa bwose */
+    [data-testid="stChatMessageContent"] {{
+        border-radius: 18px !important;
+        padding: 12px 16px !important;
+        font-size: 15px !important;
+        line-height: 1.4 !important;
+    }}
+
+    /* Ubutumwa bwa User (Kujyana Iburyo - Right side) */
+    [data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarUser"]) {{
+        flex-direction: row-reverse !important;
+        text-align: right !important;
+    }}
+    
+    [data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarUser"]) [data-testid="stChatMessageContent"] {{
+        background-color: #2f2f2f !important;
+        color: #ffffff !important;
+        margin-left: auto !important;
+        margin-right: 0px !important;
+        border-radius: 18px 18px 4px 18px !important;
+        max-width: 80% !important;
+    }}
+
+    /* Ubutumwa bwa AI / Assistant (Kuba Ibumoso - Left side) */
+    [data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarAssistant"]) {{
+        flex-direction: row !important;
+        text-align: left !important;
+    }}
+
+    [data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarAssistant"]) [data-testid="stChatMessageContent"] {{
+        background-color: transparent !important;
+        color: #ffffff !important;
+        margin-right: auto !important;
+        margin-left: 0px !important;
+        border-radius: 18px 18px 18px 4px !important;
+        max-width: 85% !important;
+    }}
+
+    /* Guhisha icyapa cy'ifoto ya user (Avatar) niba ubyifuza nk'uko bimeze mu ifoto */
+    [data-testid="stChatMessageAvatarUser"] {{
+        display: none !important;
+    }}
+    </style>
+    """
+    st.markdown(css, unsafe_allow_html=True)
+
+# Gushyiraho styling na background
+set_custom_styles('ai.png')
 
 st.title("🤖 GKevin AI Assistant")
-st.caption("GKevin , Fastest AI during responsing")
+st.caption("GKevin, Fastest AI during responding")
 
 # 3. Gufata API Key muri Streamlit Secrets cyangwa Environment Variables
 api_key = st.secrets.get("GROQ_API_KEY") or os.getenv("GROQ_API_KEY")
@@ -81,7 +118,7 @@ if "messages" not in st.session_state:
         }
     ]
 
-# Display history (ikoresha kvn.png ku bisubizo bya assistant)
+# Display history
 for message in st.session_state.messages:
     if message["role"] != "system":
         avatar = "kvn.png" if message["role"] == "assistant" else None
@@ -90,16 +127,16 @@ for message in st.session_state.messages:
 
 # 5. Kwakira ubutumwa n'Igisubizo (Streaming)
 if prompt := st.chat_input("Ask here GKevin AI ..."):
+    # Bika no kwerekana ubutumwa bw'umukoresha
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
 
-    # Ukoresheje avatar="kvn.png" hano kuri response nshya ya AI
+    # Kwerekana ubutumwa bw'umubyeyi/assistant (GKevin AI)
     with st.chat_message("assistant", avatar="kvn.png"):
         message_placeholder = st.empty()
         
         try:
-            # Spinner yo mu buryo bwa st.status() nko mu ifoto
             with st.status("GKevin AI thinking....", expanded=False) as status:
                 completion = client.chat.completions.create(
                     model="llama-3.3-70b-versatile",
