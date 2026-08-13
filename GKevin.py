@@ -85,9 +85,9 @@ if not api_key:
 # Initialize Gemini Client
 try:
     genai.configure(api_key=api_key)
-    # Gukoresha "gemini-1.5-flash" kuko irihuta cyane kandi ikora neza
+    # Gukoresha gemini-2.5-flash yemejwe
     model = genai.GenerativeModel(
-        model_name="gemini-1.5-flash",
+        model_name="gemini-2.5-flash",
         system_instruction=(
             "You are an AI assistant called GKevin AI, you were developed by Developer Kevin. "
             "Ufite ubuhanga bwo kuvuga n'iyo ukora mu Kinyarwanda gisukuye, "
