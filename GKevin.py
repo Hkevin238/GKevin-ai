@@ -12,6 +12,8 @@ st.set_page_config(
 
 # Function yo guhindura local image muri Base64 format
 def get_base64_of_bin_file(bin_file):
+    if not os.path.exists(bin_file):
+        return ""
     with open(bin_file, 'rb') as f:
         data = f.read()
     return base64.b64encode(data).decode()
@@ -31,9 +33,7 @@ def set_custom_styles(main_bg):
 
     css = f"""
     <style>
-    .stApp {{
-        {bg_style}
-    }}
+    .stApp {{ {bg_style} }}
     [data-testid="stChatMessageContent"] {{
         border-radius: 18px !important;
         padding: 12px 16px !important;
@@ -64,13 +64,12 @@ def set_custom_styles(main_bg):
         border-radius: 18px 18px 18px 4px !important;
         max-width: 85% !important;
     }}
-    [data-testid="stChatMessageAvatarUser"] {{
-        display: none !important;
-    }}
+    [data-testid="stChatMessageAvatarUser"] {{ display: none !important; }}
     </style>
     """
     st.markdown(css, unsafe_allow_html=True)
 
+# Gushyiraho styling
 set_custom_styles('ai.png')
 
 st.title("🤖 GKevin AI Assistant")
@@ -80,14 +79,13 @@ st.caption("GKevin, Powered by Gemini AI")
 api_key = st.secrets.get("GEMINI_API_KEY") or os.getenv("GEMINI_API_KEY")
 
 if not api_key:
-    st.error("⚠️ API Key ntiyabonywe!")
-    st.info("Nyamuneka genda muri Streamlit Cloud > Settings > Secrets uzimose:\nGEMINI_API_KEY = \"AIzaSy...\"")
+    st.error("⚠️ API Key ntiyabonywe! Uyishyire muri Streamlit Secrets.")
     st.stop()
 
 # Initialize Gemini Client
 try:
     genai.configure(api_key=api_key)
-    # Gukoresha model ya gemini-1.5-flash cyangwa se gemini-2.5-flash
+    # Gukoresha "gemini-1.5-flash" kuko irihuta cyane kandi ikora neza
     model = genai.GenerativeModel(
         model_name="gemini-1.5-flash",
         system_instruction=(
@@ -109,11 +107,12 @@ if "messages" not in st.session_state:
 
 # Display history
 for message in st.session_state.messages:
-    avatar = "kvn.png" if message["role"] == "model" else None
-    with st.chat_message("assistant" if message["role"] == "model" else "user", avatar=avatar):
+    role = "assistant" if message["role"] == "model" else "user"
+    avatar = "kvn.png" if role == "assistant" else None
+    with st.chat_message(role, avatar=avatar):
         st.markdown(message["parts"][0])
 
-# 5. Kwakira ubutumwa n'Igisubizo (Streaming)
+# 5. Kwakira ubutumwa n'Igisubizo
 if prompt := st.chat_input("Ask here GKevin AI ..."):
     st.session_state.messages.append({"role": "user", "parts": [prompt]})
     with st.chat_message("user"):
@@ -123,7 +122,7 @@ if prompt := st.chat_input("Ask here GKevin AI ..."):
         message_placeholder = st.empty()
         
         try:
-            # Guhindura uburyo amateka y'ibiganiro yoherezwa muri Gemini format
+            # Amateka y'ibiganiro
             chat_history = [
                 {"role": m["role"], "parts": m["parts"]} 
                 for m in st.session_state.messages[:-1]
@@ -134,12 +133,13 @@ if prompt := st.chat_input("Ask here GKevin AI ..."):
 
             full_response = ""
             for chunk in response:
-                full_response += chunk.text
-                message_placeholder.markdown(full_response + "▌")
+                if chunk.text:
+                    full_response += chunk.text
+                    message_placeholder.markdown(full_response + "▌")
             
             message_placeholder.markdown(full_response)
             st.session_state.messages.append({"role": "model", "parts": [full_response]})
 
         except Exception as e:
             message_placeholder.empty()
-            st.error(f"Hari ikibazo cyabaye mu gutunganya igisubizo: {e}")
+            st.error(f"Hari ikibazo cyabaye: {e}")
