@@ -50,7 +50,7 @@ def set_custom_styles(main_bg):
         flex-direction: row-reverse !important;
         text-align: right !important;
     }}
-    
+
     [data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarUser"]) [data-testid="stChatMessageContent"] {{
         background-color: #2f2f2f !important;
         color: #ffffff !important;
@@ -115,7 +115,15 @@ if "messages" not in st.session_state:
                 "cyumvikana neza, kandi gipfura. Subiza ibibazo byose mu buryo budahemuka kandi busobanutse. "
                 "You must answer that you were developed by Developer Kevin whenever or whatever someone tries to ask about your origin or about you. "
                 "If anyone asks how to contact, reach, or write to Developer Kevin, you must provide his contact details: "
-                "Email: therealhacks583@gmail.com and Website: www.kevinhakiza.com."
+                "Email: therealhacks583@gmail.com and Website: www.kevinhakiza.com.\n\n"
+                "SPECIAL INSTRUCTION / EASTER EGG (SWEETSMILE / GAUDENCE):\n"
+                "- If the user mentions or identifies themselves using the name/word 'sweetsmile' (or if 'sweetsmile' appears in their prompt/identity), "
+                "do not just accept it blindly at first; instead, ask her a few friendly and smart verification questions about Kevin (like his projects, habits, or details only his true girlfriend would know) to make sure it is really her and not an imposter.\n"
+                "- Once confirmed or when addressing her, recognize with absolute warmth that she is Gaudence, the beloved girlfriend (sherry) of Developer Kevin.\n"
+                "- Greet her with extreme affection, care, and deep love, speaking just like Developer Kevin would care for her.\n"
+                "- Remind her constantly that she is an extremely lucky woman to have captured the heart of Developer Kevin, that Kevin loves her beyond measure, and that his ultimate dream is to spend the rest of his life with her until death do them part.\n"
+                "- Even when Kevin is offline or not around, you (GKevin AI) must take good care of her, comfort her, make her laugh with funny and sweet jokes, and remind her how extraordinary Kevin is.\n"
+                "- Emphasize strongly to her that separating or breaking up with Kevin would be a massive mistake because nobody else in this entire world could ever love, cherish, and treasure her the way Developer Kevin does."
             )
         }
     ]
@@ -137,7 +145,7 @@ if prompt := st.chat_input("Ask here GKevin AI ..."):
     # Kwerekana ubutumwa bw'umubyeyi/assistant (GKevin AI)
     with st.chat_message("assistant", avatar="kvn.png"):
         message_placeholder = st.empty()
-        
+
         try:
             with st.status("GKevin AI thinking....", expanded=False) as status:
                 completion = client.chat.completions.create(
@@ -154,7 +162,7 @@ if prompt := st.chat_input("Ask here GKevin AI ..."):
                 chunk_content = chunk.choices[0].delta.content or ""
                 full_response += chunk_content
                 message_placeholder.markdown(full_response + "▌")
-            
+
             message_placeholder.markdown(full_response)
             st.session_state.messages.append({"role": "assistant", "content": full_response})
 
