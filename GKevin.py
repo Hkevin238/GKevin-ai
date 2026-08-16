@@ -1,12 +1,9 @@
 import base64
 import os
 import threading
-import datetime
-import time
 from flask import Flask, request, jsonify
 import streamlit as st
 from groq import Groq
-import pywhatkit as kit
 
 # ==========================================
 # 1. GAHUNDA YA FLASK (Backend yo kwakira ubutumwa na Verification)
@@ -15,7 +12,7 @@ app = Flask(__name__)
 
 # Verify Token igomba guhura neza n'iyo wandika kuri Meta
 VERIFY_TOKEN = "gkevin-ai@0793868332"
-WHATSAPP_TARGET_PHONE = os.getenv("WHATSAPP_PHONE", "+250780000000")
+WHATSAPP_TARGET_PHONE = os.getenv("WHATSAPP_PHONE", "+250732463273")
 
 @app.route('/whatsapp-webhook', methods=['GET', 'POST'])
 def whatsapp_webhook():
@@ -40,7 +37,7 @@ def whatsapp_webhook():
         sender_phone = data.get('phone', WHATSAPP_TARGET_PHONE)
         
         if incoming_msg:
-            api_key = os.getenv("GROQ_API_KEY") or "gsk_shyiramo_key_yawe_hano_neza"
+            api_key = os.getenv("GROQ_API_KEY") or "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"
             if api_key and "shyiramo_key_yawe" not in api_key:
                 groq_client = Groq(api_key=api_key)
                 completion = groq_client.chat.completions.create(
@@ -61,8 +58,9 @@ def whatsapp_webhook():
                 )
                 ai_reply = completion.choices[0].message.content
                 
-                now = datetime.datetime.now()
-                kit.sendwhatmsg(sender_phone, ai_reply, now.hour, now.minute + 1, wait_time=15, tab_close=True)
+                # Hano ushobora kongeramo uburyo bwa API (nka WhatsApp Cloud API) 
+                # bwo kohereza 'ai_reply' kuri sender_phone igihe ubikeneye.
+                print(f"Igisubizo cya GKevin AI kuri {sender_phone}: {ai_reply}")
                 
     except Exception as e:
         print(f"Ikibazo cyabaye: {e}")
@@ -152,7 +150,7 @@ set_custom_styles('ai.jpg')
 st.title("🤖 GKevin AI Assistant")
 st.caption("GKevin, Fastest AI during responding")
 
-GROQ_KEY_DIRECT = "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"
+GROQ_KEY_DIRECT = "gsk_"
 api_key = os.getenv("GROQ_API_KEY") or GROQ_KEY_DIRECT
 
 if not api_key or "shyiramo_key_yawe" in api_key:
