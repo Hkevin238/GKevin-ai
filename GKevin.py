@@ -1,16 +1,91 @@
 import base64
 import os
+import threading
+import datetime
+import time
+from flask import Flask, request, jsonify
 import streamlit as st
 from groq import Groq
+import pywhatkit as kit
 
-# 1. Page Setup
+# ==========================================
+# 1. GAHUNDA YA FLASK (Backend yo kwakira ubutumwa na Verification)
+# ==========================================
+app = Flask(__name__)
+
+# Verify Token igomba guhura neza n'iyo wandika kuri Meta
+VERIFY_TOKEN = "gkevin-ai@0793868332"
+WHATSAPP_TARGET_PHONE = os.getenv("WHATSAPP_PHONE", "+250780000000")
+
+@app.route('/whatsapp-webhook', methods=['GET', 'POST'])
+def whatsapp_webhook():
+    # 1. Kwakira GET request (Iyo Meta igenzura kandi ikemeza Webhook)
+    if request.method == 'GET':
+        mode = request.args.get('hub.mode')
+        token = request.args.get('hub.verify_token')
+        challenge = request.args.get('hub.challenge')
+
+        if mode and token:
+            if mode == 'subscribe' and token == VERIFY_TOKEN:
+                print("WEBHOOK_VERIFIED")
+                return challenge, 200
+            else:
+                return jsonify({"error": "Verification failed"}), 403
+        return jsonify({"error": "Invalid request"}), 400
+
+    # 2. Kwakira POST request (Ubutumwa busanzwe bw'abakiriya)
+    data = request.json
+    try:
+        incoming_msg = data.get('message', '')
+        sender_phone = data.get('phone', WHATSAPP_TARGET_PHONE)
+        
+        if incoming_msg:
+            api_key = os.getenv("GROQ_API_KEY") or "gsk_shyiramo_key_yawe_hano_neza"
+            if api_key and "shyiramo_key_yawe" not in api_key:
+                groq_client = Groq(api_key=api_key)
+                completion = groq_client.chat.completions.create(
+                    model="llama-3.3-70b-versatile",
+                    messages=[
+                        {
+                            "role": "system",
+                            "content": (
+                                "You are an AI assistant called GKevin AI, developed by Developer Kevin. "
+                                "Ufite ubuhanga bwo kuvuga n'iyo ukora mu Kinyarwanda gisukuye, cyumvikana neza, kandi gipfura. "
+                                "Subiza ibibazo byose mu buryo budahemuka kandi busobanutse."
+                            )
+                        },
+                        {"role": "user", "content": incoming_msg}
+                    ],
+                    temperature=0.7,
+                    max_tokens=1024
+                )
+                ai_reply = completion.choices[0].message.content
+                
+                now = datetime.datetime.now()
+                kit.sendwhatmsg(sender_phone, ai_reply, now.hour, now.minute + 1, wait_time=15, tab_close=True)
+                
+    except Exception as e:
+        print(f"Ikibazo cyabaye: {e}")
+        
+    return jsonify({"status": "success"}), 200
+
+def run_flask():
+    app.run(port=5000, debug=False, use_reloader=False)
+
+if "flask_running" not in st.session_state:
+    st.session_state.flask_running = True
+    threading.Thread(target=run_flask, daemon=True).start()
+
+
+# ==========================================
+# 2. GAHUNDA YA STREAMLIT (Web UI Interface)
+# ==========================================
 st.set_page_config(
     page_title="GKevin AI",
-    page_icon="kvn.png",
+    page_icon="ai.jpg",
     layout="centered"
 )
 
-# Function yo guhindura local image muri Base64 format
 def get_base64_of_bin_file(bin_file):
     if not os.path.exists(bin_file):
         return ""
@@ -18,13 +93,12 @@ def get_base64_of_bin_file(bin_file):
         data = f.read()
     return base64.b64encode(data).decode()
 
-# 2. Gushyiraho Custom CSS (Background & UI y'ubutumwa: User -> Right, AI -> Left)
 def set_custom_styles(main_bg):
     bg_style = ""
     if os.path.exists(main_bg):
         bin_str = get_base64_of_bin_file(main_bg)
         bg_style = f"""
-            background-image: url("data:image/png;base64,{bin_str}");
+            background-image: url("data:image/jpeg;base64,{bin_str}");
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
@@ -36,21 +110,16 @@ def set_custom_styles(main_bg):
     .stApp {{
         {bg_style}
     }}
-
-    /* Container yo gutunganya ubutumwa bwose */
     [data-testid="stChatMessageContent"] {{
         border-radius: 18px !important;
         padding: 12px 16px !important;
         font-size: 15px !important;
         line-height: 1.4 !important;
     }}
-
-    /* Ubutumwa bwa User (Kujyana Iburyo - Right side) */
     [data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarUser"]) {{
         flex-direction: row-reverse !important;
         text-align: right !important;
     }}
-
     [data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarUser"]) [data-testid="stChatMessageContent"] {{
         background-color: #2f2f2f !important;
         color: #ffffff !important;
@@ -59,13 +128,10 @@ def set_custom_styles(main_bg):
         border-radius: 18px 18px 4px 18px !important;
         max-width: 80% !important;
     }}
-
-    /* Ubutumwa bwa AI / Assistant (Kuba Ibumoso - Left side) */
     [data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarAssistant"]) {{
         flex-direction: row !important;
         text-align: left !important;
     }}
-
     [data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarAssistant"]) [data-testid="stChatMessageContent"] {{
         background-color: transparent !important;
         color: #ffffff !important;
@@ -74,8 +140,6 @@ def set_custom_styles(main_bg):
         border-radius: 18px 18px 18px 4px !important;
         max-width: 85% !important;
     }}
-
-    /* Guhisha icyapa cy'ifoto ya user (Avatar) niba ubyifuza nk'uko bimeze mu ifoto */
     [data-testid="stChatMessageAvatarUser"] {{
         display: none !important;
     }}
@@ -83,67 +147,48 @@ def set_custom_styles(main_bg):
     """
     st.markdown(css, unsafe_allow_html=True)
 
-# Gushyiraho styling na background
-set_custom_styles('ai.png')
+set_custom_styles('ai.jpg')
 
 st.title("🤖 GKevin AI Assistant")
 st.caption("GKevin, Fastest AI during responding")
 
-# 3. Gufata API Key muri Streamlit Secrets cyangwa Environment Variables
-api_key = st.secrets.get("GROQ_API_KEY") or os.getenv("GROQ_API_KEY")
+GROQ_KEY_DIRECT = "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"
+api_key = os.getenv("GROQ_API_KEY") or GROQ_KEY_DIRECT
 
-if not api_key:
-    st.error("⚠️ API Key ntiyabonywe!")
-    st.info("Nyamuneka genda muri Streamlit Cloud > Settings > Secrets uzimose:\nGROQ_API_KEY = \"gsk_...\"")
+if not api_key or "shyiramo_key_yawe" in api_key:
+    st.error("⚠️ Nyamuneka shyiramo Groq API Key yawe muri code hejuru aho yagenewe!")
     st.stop()
 
-# Initialize Groq Client
 try:
     client = Groq(api_key=api_key)
 except Exception as e:
     st.error(f"Ikibazo mu guhuza na Groq: {e}")
     st.stop()
 
-# 4. Kubika no gushinga Chat History
 if "messages" not in st.session_state:
     st.session_state.messages = [
         {
             "role": "system",
             "content": (
-                "You are an AI assistant called GKevin AI, you were developed by Developer Kevin. "
-                "Ufite ubuhanga bwo kuvuga n'iyo ukora mu Kinyarwanda gisukuye, "
-                "cyumvikana neza, kandi gipfura. Subiza ibibazo byose mu buryo budahemuka kandi busobanutse. "
-                "You must answer that you were developed by Developer Kevin whenever or whatever someone tries to ask about your origin or about you. "
-                "If anyone asks how to contact, reach, or write to Developer Kevin, you must provide his contact details: "
-                "Email: therealhacks583@gmail.com and Website: www.kevinhakiza.com.\n\n"
-                "SPECIAL INSTRUCTION / EASTER EGG (SWEETSMILE / GAUDENCE):\n"
-                "- If the user mentions or identifies themselves using the name/word 'sweetsmile' (or if 'sweetsmile' appears in their prompt/identity), "
-                "do not just accept it blindly at first; instead, ask her a few friendly and smart verification questions about Kevin (like his projects, habits, or details only his true girlfriend would know) to make sure it is really her and not an imposter.\n"
-                "- Once confirmed or when addressing her, recognize with absolute warmth that she is Gaudence, the beloved girlfriend (sherry) of Developer Kevin.\n"
-                "- Greet her with extreme affection, care, and deep love, speaking just like Developer Kevin would care for her.\n"
-                "- Remind her constantly that she is an extremely lucky woman to have captured the heart of Developer Kevin, that Kevin loves her beyond measure, and that his ultimate dream is to spend the rest of his life with her until death do them part.\n"
-                "- Even when Kevin is offline or not around, you (GKevin AI) must take good care of her, comfort her, make her laugh with funny and sweet jokes, and remind her how extraordinary Kevin is.\n"
-                "- Emphasize strongly to her that separating or breaking up with Kevin would be a massive mistake because nobody else in this entire world could ever love, cherish, and treasure her the way Developer Kevin does."
+                "You are an AI assistant called GKevin AI, developed by Developer Kevin. "
+                "Ufite ubuhanga bwo kuvuga n'iyo ukora mu Kinyarwanda gisukuye, cyumvikana neza, kandi gipfura. "
+                "Subiza ibibazo byose mu buryo budahemuka kandi busobanutse."
             )
         }
     ]
 
-# Display history
 for message in st.session_state.messages:
     if message["role"] != "system":
-        avatar = "kvn.png" if message["role"] == "assistant" else None
+        avatar = "ai.jpg" if message["role"] == "assistant" else None
         with st.chat_message(message["role"], avatar=avatar):
             st.markdown(message["content"])
 
-# 5. Kwakira ubutumwa n'Igisubizo (Streaming)
 if prompt := st.chat_input("Ask here GKevin AI ..."):
-    # Bika no kwerekana ubutumwa bw'umukoresha
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
 
-    # Kwerekana ubutumwa bw'umubyeyi/assistant (GKevin AI)
-    with st.chat_message("assistant", avatar="kvn.png"):
+    with st.chat_message("assistant", avatar="ai.jpg"):
         message_placeholder = st.empty()
 
         try:
@@ -168,4 +213,4 @@ if prompt := st.chat_input("Ask here GKevin AI ..."):
 
         except Exception as e:
             message_placeholder.empty()
-            st.error(f"Hari ikibazo cyabaye mu gutunganya igisubizo: {e}")
+            st.error(f"Hari ikibazo cyabaye: {e}")
