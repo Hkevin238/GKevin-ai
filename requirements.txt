@@ -1,9 +1,3 @@
-streamlit
-openai
-flask
-requests
-pypdf
-Pillow
 flask
 streamlit
 groq
