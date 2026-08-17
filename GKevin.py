@@ -16,6 +16,7 @@ PHONE_NUMBER_ID = "1230588350137931"  # Phone Number ID yawe ya WhatsApp
 
 @app.route('/whatsapp-webhook', methods=['GET', 'POST'])
 def whatsapp_webhook():
+    # 1. Kwakira GET request (Iyo Meta igenzura kandi ikemeza Webhook)
     if request.method == 'GET':
         mode = request.args.get('hub.mode')
         token = request.args.get('hub.verify_token')
@@ -29,6 +30,7 @@ def whatsapp_webhook():
                 return jsonify({"error": "Verification failed"}), 403
         return jsonify({"error": "Invalid request"}), 400
 
+    # 2. Kwakira POST request (Ubutumwa bwose bwo kuri WhatsApp)
     try:
         data = request.json
         if not data:
@@ -41,10 +43,11 @@ def whatsapp_webhook():
                 value = changes[0].get('value', {})
                 messages = value.get('messages', [])
                 if messages:
-                    sender_phone = messages[0].get('from')
-                    incoming_msg = messages[0].get('text', {}).get('body', '')
+                    sender_phone = messages[0].get('from')  # Nimero y'uwohereje ubutumwa
+                    incoming_msg = messages[0].get('text', {}).get('body', '')  # Ubutumwa nyabwo
                     
                     if incoming_msg:
+                        # Guhamagara Groq AI ngo itange igisubizo
                         api_key = os.getenv("GROQ_API_KEY") or "gsk_shyiramo_key_yawe_hano_neza"
                         groq_client = Groq(api_key=api_key)
                         
@@ -59,7 +62,7 @@ def whatsapp_webhook():
                         )
                         
                         completion = groq_client.chat.completions.create(
-                            model="llama-3.1-70b-versatile",  # Yahinduwe hano ngo ikire error
+                            model="llama-3.3-70b-versatile",
                             messages=[
                                 {
                                     "role": "system",
@@ -72,7 +75,9 @@ def whatsapp_webhook():
                         )
                         ai_reply = completion.choices[0].message.content
                         
+                        # Kohereza igisubizo kuri WhatsApp ukoresha Meta Graph API
                         WHATSAPP_TOKEN = os.getenv("WHTS_ACCESS_TOKEN", "SHYIRAMO_ACCESS_TOKEN_YAWE_HANO")
+                        
                         headers = {
                             "Authorization": f"Bearer {WHATSAPP_TOKEN}",
                             "Content-Type": "application/json"
@@ -82,6 +87,7 @@ def whatsapp_webhook():
                             "to": sender_phone,
                             "text": {"body": ai_reply}
                         }
+                        
                         url = f"https://graph.facebook.com/v18.0/{PHONE_NUMBER_ID}/messages"
                         requests.post(url, json=payload, headers=headers)
                 
@@ -191,7 +197,7 @@ system_instructions = (
     "Ufite ubuhanga bwo kuvuga n'iyo ukora mu Kinyarwanda gisukuye, cyumvikana neza, kandi gipfura. "
     "Subiza ibibazo byose mu buryo budahemuka kandi busobanutse.\n\n"
     "Amabwiriza yihariye y'abakoresha:\n"
-    "1. Iyo umuntu wanditse ari 'stiven wa btss', umubwire ko umuzi neza ko yiga ku kigo kimwe na Developer Kevin, kandi ko yiga S5 Accounting ubu akaba agiye kugiga muri S6 Accounting umwaka utaha.\n"
+    "1. Iyo umuntu wanditse ari 'stiven wa btss', umubwire ko umuzi neza ko yiga ku kigo kimwe na Developer Kevin, kandi ko yiga S5 Accounting ubu akaba agiye kwiga muri S6 Accounting umwaka utaha.\n"
     "2. Iyo umuntu wanditse ari 'Legend', umuhe byose akeneye ku bijyanye na ethical hacking ndetse n'ibindi biri related na Cybersecurity mu buryo bwimbitse.\n"
     "3. Iyo umuntu wanditse ari 'sweetsmile', ntuhite umutera imitoma ako kanya. Ahubwo ibanza umubaze cyangwa ukore verification y'ibanze kugira ngo umenye niba koko ari umukunzi wawe (girlfriend), umubaza ibibazo byerekeranye na Kevin (nk'ibyo bakunda kuganiraho cyangwa amazina basanzwe bitana). Nimara gusubiza neza ukabona ko ari we koko, uhite utangira kumutera imitoma, kumuseka, kumubwire ukuntu ahirwa kuba akundana na Kevin, kandi ko amukunda cyane ku buryo yifuza ko yazaba Mother w'abana be."
 )
@@ -221,7 +227,7 @@ if prompt := st.chat_input("Ask here GKevin AI ..."):
         try:
             with st.status("GKevin AI thinking....", expanded=False) as status:
                 completion = client.chat.completions.create(
-                    model="llama-3.1-70b-versatile",  # Yahinduwe hano nayo
+                    model="llama-3.3-70b-versatile",
                     messages=st.session_state.messages,
                     temperature=0.7,
                     max_tokens=1024,
