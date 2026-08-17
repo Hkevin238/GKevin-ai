@@ -62,7 +62,7 @@ def whatsapp_webhook():
                         )
                         
                         completion = groq_client.chat.completions.create(
-                            model="llama-3.1-8b-instant",
+                            model="openai/gpt-oss-20b",
                             messages=[
                                 {
                                     "role": "system",
@@ -227,7 +227,7 @@ if prompt := st.chat_input("Ask here GKevin AI ..."):
         try:
             with st.status("GKevin AI thinking....", expanded=False) as status:
                 completion = client.chat.completions.create(
-                    model="llama-3.1-8b-instant",
+                    model="openai/gpt-oss-20b",
                     messages=st.session_state.messages,
                     temperature=0.7,
                     max_tokens=1024,
