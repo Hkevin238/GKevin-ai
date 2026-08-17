@@ -16,7 +16,6 @@ PHONE_NUMBER_ID = "1230588350137931"  # Phone Number ID yawe ya WhatsApp
 
 @app.route('/whatsapp-webhook', methods=['GET', 'POST'])
 def whatsapp_webhook():
-    # 1. Kwakira GET request (Iyo Meta igenzura kandi ikemeza Webhook)
     if request.method == 'GET':
         mode = request.args.get('hub.mode')
         token = request.args.get('hub.verify_token')
@@ -30,7 +29,6 @@ def whatsapp_webhook():
                 return jsonify({"error": "Verification failed"}), 403
         return jsonify({"error": "Invalid request"}), 400
 
-    # 2. Kwakira POST request (Ubutumwa bwose bwo kuri WhatsApp)
     try:
         data = request.json
         if not data:
@@ -43,11 +41,10 @@ def whatsapp_webhook():
                 value = changes[0].get('value', {})
                 messages = value.get('messages', [])
                 if messages:
-                    sender_phone = messages[0].get('from')  # Nimero y'uwohereje ubutumwa
-                    incoming_msg = messages[0].get('text', {}).get('body', '')  # Ubutumwa nyabwo
+                    sender_phone = messages[0].get('from')
+                    incoming_msg = messages[0].get('text', {}).get('body', '')
                     
                     if incoming_msg:
-                        # Guhamagara Groq AI ngo itange igisubizo
                         api_key = os.getenv("GROQ_API_KEY") or "gsk_shyiramo_key_yawe_hano_neza"
                         groq_client = Groq(api_key=api_key)
                         
@@ -62,7 +59,7 @@ def whatsapp_webhook():
                         )
                         
                         completion = groq_client.chat.completions.create(
-                            model="llama-3.3-70b-versatile",
+                            model="llama-3.1-70b-versatile",  # Yahinduwe hano ngo ikire error
                             messages=[
                                 {
                                     "role": "system",
@@ -75,9 +72,7 @@ def whatsapp_webhook():
                         )
                         ai_reply = completion.choices[0].message.content
                         
-                        # Kohereza igisubizo kuri WhatsApp ukoresha Meta Graph API
                         WHATSAPP_TOKEN = os.getenv("WHTS_ACCESS_TOKEN", "SHYIRAMO_ACCESS_TOKEN_YAWE_HANO")
-                        
                         headers = {
                             "Authorization": f"Bearer {WHATSAPP_TOKEN}",
                             "Content-Type": "application/json"
@@ -87,7 +82,6 @@ def whatsapp_webhook():
                             "to": sender_phone,
                             "text": {"body": ai_reply}
                         }
-                        
                         url = f"https://graph.facebook.com/v18.0/{PHONE_NUMBER_ID}/messages"
                         requests.post(url, json=payload, headers=headers)
                 
@@ -227,7 +221,7 @@ if prompt := st.chat_input("Ask here GKevin AI ..."):
         try:
             with st.status("GKevin AI thinking....", expanded=False) as status:
                 completion = client.chat.completions.create(
-                    model="llama-3.3-70b-versatile",
+                    model="llama-3.1-70b-versatile",  # Yahinduwe hano nayo
                     messages=st.session_state.messages,
                     temperature=0.7,
                     max_tokens=1024,
