@@ -4,52 +4,63 @@ import streamlit as st
 from groq import Groq
 
 # ==========================================
-# GAHUNDA YA STREAMLIT (ChatGPT / Gemini Dark UI)
+# GAHUNDA YA STREAMLIT (ChatGPT / Gemini Dark UI + Custom Avatar & Ticks)
 # ==========================================
 st.set_page_config(
     page_title="GKevin AI",
-    page_icon="kvn.png",
+    page_icon="🤖",
     layout="centered"
 )
 
-# 1. CUSTOM CSS Y'ISURA N'IMITATSI (Pure Black & ChatGPT/Gemini Style)
-chat_gpt_css = """
+def get_base64_of_bin_file(bin_file):
+    if not os.path.exists(bin_file):
+        return ""
+    with open(bin_file, 'rb') as f:
+        data = f.read()
+    return base64.b64encode(data).decode()
+
+# Convert kvn.png to base64 for embedding in CSS avatar
+avatar_base64 = get_base64_of_bin_file("kvn.png")
+avatar_data_uri = f"data:image/png;base64,{avatar_base64}" if avatar_base64 else ""
+
+# 1. CUSTOM CSS Y'ISURA (Pure Black, Ticks, & Custom AI Avatar)
+chat_gpt_css = f"""
 <style>
 /* Background yose iba umukara w'umwijima */
-.stApp {
+.stApp {{
     background-color: #000000 !important;
     color: #ffffff !important;
-}
+}}
 
 /* Guhisha Header na Footer ya Streamlit */
-header, footer, [data-testid="stHeader"] {
+header, footer, [data-testid="stHeader"] {{
     display: none !important;
-}
+}}
 
 /* Gucungira ahabugenewe ubutumwa ngo bube hagati */
-.block-container {
+.block-container {{
     padding-top: 2rem !important;
     padding-bottom: 7rem !important;
     max-width: 750px !important;
-}
+}}
 
 /* Isura y'ubutumwa bw'ukoresha n'ubw'AI */
-[data-testid="stChatMessageContent"] {
+[data-testid="stChatMessageContent"] {{
     background-color: transparent !important;
     color: #ffffff !important;
     padding: 0px !important;
     font-size: 1rem !important;
     line-height: 1.6 !important;
-}
+}}
 
-/* Ubutumwa bw'ukoresha (User Message Box) */
-[data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarUser"]) {
+/* Ubutumwa bw'ukoresha (User Message Box) + Udu-ticks tubiri (✓✓) */
+[data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarUser"]) {{
     flex-direction: row-reverse !important;
     text-align: right !important;
     margin-bottom: 20px !important;
-}
+}}
 
-[data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarUser"]) [data-testid="stChatMessageContent"] {
+[data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarUser"]) [data-testid="stChatMessageContent"] {{
     background-color: #2f2f2f !important;
     color: #ffffff !important;
     margin-left: auto !important;
@@ -57,16 +68,30 @@ header, footer, [data-testid="stHeader"] {
     padding: 12px 18px !important;
     border-radius: 20px 20px 4px 20px !important;
     max-width: 80% !important;
-}
+    position: relative;
+    padding-right: 38px !important;
+}}
+
+/* Gushyiraho udu-ticks tubiri tw'ubururu kuri message y'umu user */
+[data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarUser"]) [data-testid="stChatMessageContent"]::after {{
+    content: "✓✓";
+    position: absolute;
+    bottom: 4px;
+    right: 10px;
+    font-size: 0.75rem;
+    color: #3b82f6;
+    font-weight: bold;
+    letter-spacing: -2px;
+}}
 
 /* Ubutumwa bwa AI / Assistant */
-[data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarAssistant"]) {
+[data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarAssistant"]) {{
     flex-direction: row !important;
     text-align: left !important;
     margin-bottom: 25px !important;
-}
+}}
 
-[data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarAssistant"]) [data-testid="stChatMessageContent"] {
+[data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarAssistant"]) [data-testid="stChatMessageContent"] {{
     background-color: #1e1e1e !important;
     color: #ececec !important;
     margin-right: auto !important;
@@ -75,30 +100,37 @@ header, footer, [data-testid="stHeader"] {
     border-radius: 20px 20px 20px 4px !important;
     max-width: 85% !important;
     border: 1px solid #2a2a2a !important;
-}
+}}
 
-/* Guhisha Avatars z'amashusho asanzwe */
-[data-testid="stChatMessageAvatarUser"], [data-testid="stChatMessageAvatarAssistant"] {
+/* Guhisha avatar isanzwe y'umukoresha */
+[data-testid="stChatMessageAvatarUser"] {{
     display: none !important;
-}
+}}
+
+/* Gushyiraho ifoto ya kvn.png nka Avatar ya AI */
+[data-testid="stChatMessageAvatarAssistant"] img {{
+    content: url("{avatar_data_uri}") !important;
+    border-radius: 50% !important;
+    object-fit: cover !important;
+}}
 
 /* Agasanduku kowandikamo (Chat Input) nk'aka ChatGPT/Gemini */
-.stChatInputContainer {
+.stChatInputContainer {{
     background-color: transparent !important;
     padding-bottom: 20px !important;
-}
+}}
 
-.stChatInput > div {
+.stChatInput > div {{
     background-color: #1f1f1f !important;
     border-radius: 30px !important;
     border: 1px solid #333333 !important;
     color: #ffffff !important;
     padding-left: 10px !important;
-}
+}}
 
-.stChatInput textarea {
+.stChatInput textarea {{
     color: #ffffff !important;
-}
+}}
 </style>
 """
 st.markdown(chat_gpt_css, unsafe_allow_html=True)
@@ -149,10 +181,11 @@ if "messages" not in st.session_state:
         }
     ]
 
-# Kwerekana amateka y'ibiganiro
+# Kwerekana amateka y'ibiganiro (ukoresha kvn.png nka avatar ya assistant)
 for message in st.session_state.messages:
     if message["role"] != "system":
-        with st.chat_message(message["role"]):
+        avatar_img = "kvn.png" if message["role"] == "assistant" else None
+        with st.chat_message(message["role"], avatar=avatar_img):
             st.markdown(message["content"])
 
 # 4. GUKURAKURA KWANDIKA NO GUSUBIZA
@@ -161,7 +194,7 @@ if prompt := st.chat_input("Ask here GKevin AI ..."):
     with st.chat_message("user"):
         st.markdown(prompt)
 
-    with st.chat_message("assistant"):
+    with st.chat_message("assistant", avatar="kvn.png"):
         message_placeholder = st.empty()
 
         try:
