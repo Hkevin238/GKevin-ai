@@ -8,7 +8,7 @@ from groq import Groq
 # ==========================================
 st.set_page_config(
     page_title="GKevin AI",
-    page_icon="ai.png",
+    page_icon="kvn.png",
     layout="centered"
 )
 
