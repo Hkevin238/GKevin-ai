@@ -1,5 +1,5 @@
-flask
+flask>=2.0.0
 gunicorn==21.2.0
-openai
-requests
-streamlit
+openai>=1.0.0
+requests>=2.28.0
+streamlit>=1.0.0
