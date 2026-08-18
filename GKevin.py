@@ -8,71 +8,72 @@ from groq import Groq
 # ==========================================
 st.set_page_config(
     page_title="GKevin AI",
-    page_icon="🤖",
+    page_icon="ai.jpg",
     layout="centered"
 )
 
-def set_custom_styles():
-    css = """
+def get_base64_of_bin_file(bin_file):
+    if not os.path.exists(bin_file):
+        return ""
+    with open(bin_file, 'rb') as f:
+        data = f.read()
+    return base64.b64encode(data).decode()
+
+def set_custom_styles(main_bg):
+    bg_style = ""
+    if os.path.exists(main_bg):
+        bin_str = get_base64_of_bin_file(main_bg)
+        bg_style = f"""
+            background-image: url("data:image/jpeg;base64,{bin_str}");
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+        """
+
+    css = f"""
     <style>
-    /* Background yose igire black */
-    .stApp {
-        background-color: #000000 !important;
-    }
-    
-    /* Uburyo ubutumwa bugaragara nka ChatGPT (Bubble za user n'iza assistant) */
-    [data-testid="stChatMessageContent"] {
-        background-color: transparent !important;
-        color: #ffffff !important;
+    .stApp {{
+        {bg_style}
+    }}
+    [data-testid="stChatMessageContent"] {{
         border-radius: 18px !important;
         padding: 12px 16px !important;
         font-size: 15px !important;
         line-height: 1.4 !important;
-    }
-    
-    /* Igice cy'umukoresha (User message bubble) */
-    [data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarUser"]) {
+    }}
+    [data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarUser"]) {{
         flex-direction: row-reverse !important;
         text-align: right !important;
-    }
-    [data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarUser"]) [data-testid="stChatMessageContent"] {
+    }}
+    [data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarUser"]) [data-testid="stChatMessageContent"] {{
         background-color: #2f2f2f !important;
         color: #ffffff !important;
         margin-left: auto !important;
         margin-right: 0px !important;
         border-radius: 18px 18px 4px 18px !important;
         max-width: 80% !important;
-    }
-    
-    /* Igice cya Assistant */
-    [data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarAssistant"]) {
+    }}
+    [data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarAssistant"]) {{
         flex-direction: row !important;
         text-align: left !important;
-    }
-    [data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarAssistant"]) [data-testid="stChatMessageContent"] {
-        background-color: #000000 !important;
+    }}
+    [data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarAssistant"]) [data-testid="stChatMessageContent"] {{
+        background-color: transparent !important;
         color: #ffffff !important;
         margin-right: auto !important;
         margin-left: 0px !important;
+        border-radius: 18px 18px 18px 4px !important;
         max-width: 85% !important;
-    }
-    
-    /* Gushisha ama-avatar niba bidakenewe cyangwa kuyarekura */
-    [data-testid="stChatMessageAvatarUser"] {
+    }}
+    [data-testid="stChatMessageAvatarUser"] {{
         display: none !important;
-    }
-    
-    /* Guhindura lang/input box yo hasi nk'iya ChatGPT */
-    [data-testid="stChatInput"] {
-        background-color: #2f2f2f !important;
-        border-radius: 12px !important;
-        border: 1px solid #444444 !important;
-    }
+    }}
     </style>
     """
     st.markdown(css, unsafe_allow_html=True)
 
-set_custom_styles()
+set_custom_styles('ai.jpg')
 
 st.title("🤖 GKevin AI Assistant")
 st.caption("GKevin, Fastest AI during responding")
@@ -112,25 +113,28 @@ if "messages" not in st.session_state:
 
 for message in st.session_state.messages:
     if message["role"] != "system":
-        with st.chat_message(message["role"]):
+        avatar = "ai.jpg" if message["role"] == "assistant" else None
+        with st.chat_message(message["role"], avatar=avatar):
             st.markdown(message["content"])
 
-if prompt := st.chat_input("Message ChatGPT..."):
+if prompt := st.chat_input("Ask here GKevin AI ..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
 
-    with st.chat_message("assistant"):
+    with st.chat_message("assistant", avatar="ai.jpg"):
         message_placeholder = st.empty()
 
         try:
-            completion = client.chat.completions.create(
-                model="openai/gpt-oss-20b",
-                messages=st.session_state.messages,
-                temperature=0.7,
-                max_tokens=1024,
-                stream=True
-            )
+            with st.status("GKevin AI thinking....", expanded=False) as status:
+                completion = client.chat.completions.create(
+                    model="openai/gpt-oss-20b",
+                    messages=st.session_state.messages,
+                    temperature=0.7,
+                    max_tokens=1024,
+                    stream=True
+                )
+                status.update(label="Done!", state="complete", expanded=False)
 
             full_response = ""
             for chunk in completion:
