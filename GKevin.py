@@ -4,80 +4,117 @@ import streamlit as st
 from groq import Groq
 
 # ==========================================
-# GAHUNDA YA STREAMLIT (Web UI Interface)
+# GAHUNDA YA STREAMLIT (ChatGPT / Gemini Dark UI)
 # ==========================================
 st.set_page_config(
     page_title="GKevin AI",
-    page_icon="ai.jpg",
+    page_icon="🤖",
     layout="centered"
 )
 
-def get_base64_of_bin_file(bin_file):
-    if not os.path.exists(bin_file):
-        return ""
-    with open(bin_file, 'rb') as f:
-        data = f.read()
-    return base64.b64encode(data).decode()
+# 1. CUSTOM CSS Y'ISURA N'IMITATSI (Pure Black & ChatGPT/Gemini Style)
+chat_gpt_css = """
+<style>
+/* Background yose iba umukara w'umwijima */
+.stApp {
+    background-color: #000000 !important;
+    color: #ffffff !important;
+}
 
-def set_custom_styles(main_bg):
-    bg_style = ""
-    if os.path.exists(main_bg):
-        bin_str = get_base64_of_bin_file(main_bg)
-        bg_style = f"""
-            background-image: url("data:image/jpeg;base64,{bin_str}");
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-            background-attachment: fixed;
-        """
+/* Guhisha Header na Footer ya Streamlit */
+header, footer, [data-testid="stHeader"] {
+    display: none !important;
+}
 
-    css = f"""
-    <style>
-    .stApp {{
-        {bg_style}
-    }}
-    [data-testid="stChatMessageContent"] {{
-        border-radius: 18px !important;
-        padding: 12px 16px !important;
-        font-size: 15px !important;
-        line-height: 1.4 !important;
-    }}
-    [data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarUser"]) {{
-        flex-direction: row-reverse !important;
-        text-align: right !important;
-    }}
-    [data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarUser"]) [data-testid="stChatMessageContent"] {{
-        background-color: #2f2f2f !important;
-        color: #ffffff !important;
-        margin-left: auto !important;
-        margin-right: 0px !important;
-        border-radius: 18px 18px 4px 18px !important;
-        max-width: 80% !important;
-    }}
-    [data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarAssistant"]) {{
-        flex-direction: row !important;
-        text-align: left !important;
-    }}
-    [data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarAssistant"]) [data-testid="stChatMessageContent"] {{
-        background-color: transparent !important;
-        color: #ffffff !important;
-        margin-right: auto !important;
-        margin-left: 0px !important;
-        border-radius: 18px 18px 18px 4px !important;
-        max-width: 85% !important;
-    }}
-    [data-testid="stChatMessageAvatarUser"] {{
-        display: none !important;
-    }}
-    </style>
+/* Gucungira ahabugenewe ubutumwa ngo bube hagati */
+.block-container {
+    padding-top: 2rem !important;
+    padding-bottom: 7rem !important;
+    max-width: 750px !important;
+}
+
+/* Isura y'ubutumwa bw'ukoresha n'ubw'AI */
+[data-testid="stChatMessageContent"] {
+    background-color: transparent !important;
+    color: #ffffff !important;
+    padding: 0px !important;
+    font-size: 1rem !important;
+    line-height: 1.6 !important;
+}
+
+/* Ubutumwa bw'ukoresha (User Message Box) */
+[data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarUser"]) {
+    flex-direction: row-reverse !important;
+    text-align: right !important;
+    margin-bottom: 20px !important;
+}
+
+[data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarUser"]) [data-testid="stChatMessageContent"] {
+    background-color: #2f2f2f !important;
+    color: #ffffff !important;
+    margin-left: auto !important;
+    margin-right: 0px !important;
+    padding: 12px 18px !important;
+    border-radius: 20px 20px 4px 20px !important;
+    max-width: 80% !important;
+}
+
+/* Ubutumwa bwa AI / Assistant */
+[data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarAssistant"]) {
+    flex-direction: row !important;
+    text-align: left !important;
+    margin-bottom: 25px !important;
+}
+
+[data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarAssistant"]) [data-testid="stChatMessageContent"] {
+    background-color: #1e1e1e !important;
+    color: #ececec !important;
+    margin-right: auto !important;
+    margin-left: 0px !important;
+    padding: 14px 20px !important;
+    border-radius: 20px 20px 20px 4px !important;
+    max-width: 85% !important;
+    border: 1px solid #2a2a2a !important;
+}
+
+/* Guhisha Avatars z'amashusho asanzwe */
+[data-testid="stChatMessageAvatarUser"], [data-testid="stChatMessageAvatarAssistant"] {
+    display: none !important;
+}
+
+/* Agasanduku kowandikamo (Chat Input) nk'aka ChatGPT/Gemini */
+.stChatInputContainer {
+    background-color: transparent !important;
+    padding-bottom: 20px !important;
+}
+
+.stChatInput > div {
+    background-color: #1f1f1f !important;
+    border-radius: 30px !important;
+    border: 1px solid #333333 !important;
+    color: #ffffff !important;
+    padding-left: 10px !important;
+}
+
+.stChatInput textarea {
+    color: #ffffff !important;
+}
+</style>
+"""
+st.markdown(chat_gpt_css, unsafe_allow_html=True)
+
+# Umutwe w'urubuga (Header nka ChatGPT)
+st.markdown(
     """
-    st.markdown(css, unsafe_allow_html=True)
+    <div style="text-align: center; margin-bottom: 30px;">
+        <h2 style="color: #ffffff; font-weight: 600; margin-bottom: 5px;">🤖 GKevin AI Assistant</h2>
+        <p style="color: #888888; font-size: 0.9rem;">GKevin, Fastest AI during responding</p>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
 
-set_custom_styles('ai.jpg')
-
-st.title("🤖 GKevin AI Assistant")
-st.caption("GKevin, Fastest AI during responding")
-
+# 2. API KEY SETUP
 GROQ_KEY_DIRECT = "gsk_"
 api_key = os.getenv("GROQ_API_KEY") or GROQ_KEY_DIRECT
 
@@ -91,6 +128,7 @@ except Exception as e:
     st.error(f"Ikibazo mu guhuza na Groq: {e}")
     st.stop()
 
+# 3. SYSTEM INSTRUCTIONS
 system_instructions = (
     "You are an AI assistant called GKevin AI, developed solely by Developer Kevin. "
     "Ntago wakozwe na OpenAI cyangwa ikindi kigo icyo ari cyo cyose; wakozwe kandi washinzwe na Developer Kevin ku buryo bwihariye. "
@@ -111,18 +149,19 @@ if "messages" not in st.session_state:
         }
     ]
 
+# Kwerekana amateka y'ibiganiro
 for message in st.session_state.messages:
     if message["role"] != "system":
-        avatar = "ai.jpg" if message["role"] == "assistant" else None
-        with st.chat_message(message["role"], avatar=avatar):
+        with st.chat_message(message["role"]):
             st.markdown(message["content"])
 
+# 4. GUKURAKURA KWANDIKA NO GUSUBIZA
 if prompt := st.chat_input("Ask here GKevin AI ..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
 
-    with st.chat_message("assistant", avatar="ai.jpg"):
+    with st.chat_message("assistant"):
         message_placeholder = st.empty()
 
         try:
