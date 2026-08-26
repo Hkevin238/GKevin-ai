@@ -4,7 +4,7 @@ import streamlit as st
 from groq import Groq
 
 # ==========================================
-# GAHUNDA YA STREAMLIT (ChatGPT / Gemini Dark UI + Custom Avatar & Ticks + Starry Background)
+# GAHUNDA YA STREAMLIT (ChatGPT / Gemini Dark UI + Custom Avatar & Ticks + Larger Moving Stars)
 # ==========================================
 st.set_page_config(
     page_title="GKevin AI",
@@ -23,7 +23,7 @@ def get_base64_of_bin_file(bin_file):
 avatar_base64 = get_base64_of_bin_file("kvn.png")
 avatar_data_uri = f"data:image/png;base64,{avatar_base64}" if avatar_base64 else ""
 
-# 1. CUSTOM CSS Y'ISURA (Starry Animated Background, Ticks, & Custom AI Avatar)
+# 1. CUSTOM CSS Y'ISURA (Larger Starry Animated Background, Ticks, & Custom AI Avatar)
 chat_gpt_css = f"""
 <style>
 @keyframes moveStars {{
@@ -35,17 +35,17 @@ chat_gpt_css = f"""
     }}
 }}
 
-/* Background isa n'iy'ikirere cy'inyenyeri zikora moving */
+/* Background isa n'iy'ikirere cy'inyenyeri nini zikora moving */
 .stApp {{
     background-color: #050505 !important;
     background-image: 
-        radial-gradient(2px 2px at 20px 30px, #ffffff, rgba(0,0,0,0)),
-        radial-gradient(2px 2px at 40px 70px, #ffd700, rgba(0,0,0,0)),
-        radial-gradient(1px 1px at 90px 40px, #ffffff, rgba(0,0,0,0)),
-        radial-gradient(2px 2px at 160px 120px, #fff8dc, rgba(0,0,0,0)),
-        radial-gradient(1.5px 1.5px at 230px 180px, #ffffff, rgba(0,0,0,0)),
-        radial-gradient(2px 2px at 350px 250px, #ffd700, rgba(0,0,0,0)),
-        radial-gradient(1px 1px at 450px 350px, #ffffff, rgba(0,0,0,0)) !important;
+        radial-gradient(4px 4px at 20px 30px, #ffffff, rgba(0,0,0,0)),
+        radial-gradient(5px 5px at 40px 70px, #ffd700, rgba(0,0,0,0)),
+        radial-gradient(3px 3px at 90px 40px, #ffffff, rgba(0,0,0,0)),
+        radial-gradient(4px 4px at 160px 120px, #fff8dc, rgba(0,0,0,0)),
+        radial-gradient(3.5px 3.5px at 230px 180px, #ffffff, rgba(0,0,0,0)),
+        radial-gradient(5px 5px at 350px 250px, #ffd700, rgba(0,0,0,0)),
+        radial-gradient(3px 3px at 450px 350px, #ffffff, rgba(0,0,0,0)) !important;
     background-repeat: repeat !important;
     background-size: 550px 550px !important;
     animation: moveStars 120s linear infinite !important;
