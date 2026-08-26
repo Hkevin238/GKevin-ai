@@ -4,7 +4,7 @@ import streamlit as st
 from groq import Groq
 
 # ==========================================
-# GAHUNDA YA STREAMLIT (ChatGPT / Gemini Dark UI + Custom Avatar & Ticks + Larger Moving Stars)
+# GAHUNDA YA STREAMLIT (ChatGPT / Gemini Dark UI + Custom Avatar & Ticks + ✨Sparkle Effect)
 # ==========================================
 st.set_page_config(
     page_title="GKevin AI",
@@ -23,32 +23,12 @@ def get_base64_of_bin_file(bin_file):
 avatar_base64 = get_base64_of_bin_file("kvn.png")
 avatar_data_uri = f"data:image/png;base64,{avatar_base64}" if avatar_base64 else ""
 
-# 1. CUSTOM CSS Y'ISURA (Larger Starry Animated Background, Ticks, & Custom AI Avatar)
+# 1. CUSTOM CSS Y'ISURA (Pure Black, Ticks, Custom AI Avatar, & ✨Sparkle Effect)
 chat_gpt_css = f"""
 <style>
-@keyframes moveStars {{
-    from {{
-        background-position: 0 0;
-    }}
-    to {{
-        background-position: -10000px 5000px;
-    }}
-}}
-
-/* Background isa n'iy'ikirere cy'inyenyeri nini zikora moving */
+/* Background yose iba umukara w'umwijima */
 .stApp {{
-    background-color: #050505 !important;
-    background-image: 
-        radial-gradient(4px 4px at 20px 30px, #ffffff, rgba(0,0,0,0)),
-        radial-gradient(5px 5px at 40px 70px, #ffd700, rgba(0,0,0,0)),
-        radial-gradient(3px 3px at 90px 40px, #ffffff, rgba(0,0,0,0)),
-        radial-gradient(4px 4px at 160px 120px, #fff8dc, rgba(0,0,0,0)),
-        radial-gradient(3.5px 3.5px at 230px 180px, #ffffff, rgba(0,0,0,0)),
-        radial-gradient(5px 5px at 350px 250px, #ffd700, rgba(0,0,0,0)),
-        radial-gradient(3px 3px at 450px 350px, #ffffff, rgba(0,0,0,0)) !important;
-    background-repeat: repeat !important;
-    background-size: 550px 550px !important;
-    animation: moveStars 120s linear infinite !important;
+    background-color: #000000 !important;
     color: #ffffff !important;
 }}
 
@@ -104,11 +84,12 @@ header, footer, [data-testid="stHeader"] {{
     letter-spacing: -2px;
 }}
 
-/* Ubutumwa bwa AI / Assistant */
+/* Ubutumwa bwa AI / Assistant +✨ Sparkle Effect */
 [data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarAssistant"]) {{
     flex-direction: row !important;
     text-align: left !important;
     margin-bottom: 25px !important;
+    position: relative; /* Gufasha mu positioning y'utumenyetso */
 }}
 
 [data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarAssistant"]) [data-testid="stChatMessageContent"] {{
@@ -132,6 +113,36 @@ header, footer, [data-testid="stHeader"] {{
     content: url("{avatar_data_uri}") !important;
     border-radius: 50% !important;
     object-fit: cover !important;
+}}
+
+/* ✨ Sparkle Effect: Utumenyetso duto tugenda twoherezwa hafi y'ubutumwa bw'AI */
+@keyframes sparkle {{
+    0%, 100% {{ transform: scale(0); opacity: 0; }}
+    50% {{ transform: scale(1); opacity: 1; }}
+}}
+
+[data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarAssistant"])::before,
+[data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarAssistant"])::after {{
+    content: "✨";
+    position: absolute;
+    font-size: 1.5rem;
+    animation: sparkle 2.5s infinite;
+    pointer-events: none; /* Ntibikoma imbere gukanda kuri chat */
+    z-index: -1; /* Biba inyuma y'ubutumwa */
+}}
+
+/* Position y'utumenyetso ku ruhande rw'ubumoso bwa AI message */
+[data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarAssistant"])::before {{
+    top: -10px;
+    left: -20px;
+    animation-delay: 0.2s;
+}}
+
+[data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarAssistant"])::after {{
+    bottom: 5px;
+    left: -35px;
+    animation-delay: 1.2s;
+    font-size: 1rem;
 }}
 
 /* Agasanduku kowandikamo (Chat Input) nk'aka ChatGPT/Gemini */
